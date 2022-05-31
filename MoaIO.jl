@@ -69,6 +69,17 @@ function parse_input(path::String)
         end
     end
 
+    # Create bonds
+    global bonds = Vector{Bonds.AbstractBond}()
+    cell_list = ProximitySearch.create_cell_list(nodes, horizon)
+    for node in nodes
+        for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
+            push!(bonds, Bonds.Bond(node, other, false))
+        end
+    end
+    println("Created ", length(bonds), " bonds")
+
+
     # Parse BCs
     global boundaryConditions = Vector{BoundaryConditions.AbstractBoundaryCondition}()
     for bc in input["BC"]
