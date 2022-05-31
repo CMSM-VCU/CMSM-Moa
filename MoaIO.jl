@@ -90,7 +90,11 @@ function parse_input(path::String)
 
 
     # Other (force planes, etc.)
-
+    global forceProbes = Vector{ForceProbes.AbstractForceProbe}()
+    for forceProbe in input["ForceProbe"]
+        push!(forceProbes, ForceProbes.parse_force_probe_plane(forceProbe, bonds))
+    end
+    println("Created ", length(forceProbes), " force probes")
 
     println("Finished reading input!")
 end
