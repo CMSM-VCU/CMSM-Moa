@@ -11,12 +11,12 @@ mutable struct Node <: AbstractNode
     velocity::MVector{3, Float64}
     @atomic force::MVector{3, Float64}
     volume::Float64
-    material::Materials.LinearEalstic
+    material::Materials.AbstractMaterial
 end
 
 # Some constructors
 Node(x::Float64, y::Float64, z::Float64, m::Materials.AbstractMaterial, grid_spacing::Float64) = Node([x,y,z], [0,0,0], [0,0,0], [0,0,0], grid_spacing^3, m)
-Node(pos::MVector{3, Float64}, m::Materials.LinearEalstic, grid_spacing::Float64) = Node(pos, [0,0,0], [0,0,0], [0,0,0], grid_spacing^3, m)
+Node(pos::MVector{3, Float64}, m::Materials.AbstractMaterial, grid_spacing::Float64) = Node(pos, [0,0,0], [0,0,0], [0,0,0], grid_spacing^3, m)
 
 
 end

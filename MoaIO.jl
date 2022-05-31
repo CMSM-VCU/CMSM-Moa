@@ -51,8 +51,13 @@ function parse_input(path::String)
         @assert :x in input_grid.names
         @assert :y in input_grid.names
         @assert :z in input_grid.names
+        @assert :material in input_grid.names
         for row in input_grid
-            mat = first([material for material in materials if material.id == row[:material]])
+            mat = defaultMaterial
+            material_candidates = [material for material in materials if material.id == row[:material]]
+            if size(material_candidates)[1] != 0
+                mat = first(material_candidates)
+            end
             push!(nodes, Nodes.Node(
                         Float64(row[:x]),
                         Float64(row[:y]),
@@ -66,6 +71,7 @@ function parse_input(path::String)
 
     # Parse BCs
     boundaryConditions = Vector{BoundaryConditions.AbstractBoundaryCondition}()
+    print("node size: ", size(nodes))
     for bc in input["BC"]
         push!(boundaryConditions, BoundaryConditions.parse_bc(bc, nodes))
     end
