@@ -43,7 +43,6 @@ function get_nodes_within_volume(nodes, volume)
             push!(n, node)
         end
     end
-
     if size(n)[1] == 0
         println("WARNING, CAPTURED VOLUME WITH 0 NODES!!!!")
     end
