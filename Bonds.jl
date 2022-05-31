@@ -3,7 +3,9 @@ module Bonds
 using LinearAlgebra
 using ..Nodes
 
-mutable struct Bond
+abstract type AbstractBond end
+
+mutable struct Bond <: AbstractBond
     from::Nodes.Node
     to::Nodes.Node
     isBroken::Bool
