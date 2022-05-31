@@ -2,6 +2,8 @@ module TimeIntegration
 
 using ..Materials, ..Nodes, ..Bonds
 
+# function dynamic_stable_timestep()
+
 function dynamic_integration(nodes, bonds, dt)
 
     Threads.@threads for node in nodes
@@ -17,14 +19,14 @@ function dynamic_integration(nodes, bonds, dt)
 
     # Break bonds
     Threads.@threads for bond in bonds
-        if PD.should_break(bond)
-            PD.break!(bond)
+        if Bonds.should_break(bond)
+            Bonds.break!(bond)
         end
     end
 
     # Apply bond force to nodes
     Threads.@threads for bond in bonds
-        PD.apply_force(bond)
+        Bonds.apply_force(bond)
     end
 
     Threads.@threads for node in nodes
