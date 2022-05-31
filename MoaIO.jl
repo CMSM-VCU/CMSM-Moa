@@ -1,25 +1,6 @@
 using TOML
 using CSV
 
-function parse_material(inputDict)
-    # A material needs at least these 3 properties
-    @assert haskey(inputDict, "type")
-    @assert haskey(inputDict, "density")
-    @assert haskey(inputDict, "id")
-
-    if inputDict["type"] == "LinearElastic"
-        return Materials.LinearEalstic(inputDict["id"], inputDict["density"], inputDict["critical_strain"], inputDict["bond_constant"])
-    elseif inputDict["type"] == "Custom"
-        return Materials.CustomMaterial(inputDict["id"], inputDict["density"])
-    else
-        # Material type not known
-        println("#### Unknown type from material: ", inputDict["id"])
-        throw(Exception)
-    end
-end
-
-
-
 function parse_input(path::String)
     input = TOML.parsefile(path)
     
@@ -32,11 +13,11 @@ function parse_input(path::String)
     # Parse materials
     global materials = Vector{Materials.AbstractMaterial}()
 
-    global defaultMaterial = parse_material(input["MaterialDefault"])
+    global defaultMaterial = Materials.parse_material(input["MaterialDefault"])
     push!(materials, defaultMaterial)
 
     for materialInput in input["Material"]
-        mat::Materials.AbstractMaterial = parse_material(materialInput)
+        mat::Materials.AbstractMaterial = Materials.parse_material(materialInput)
         # Each material should have a unique id
         @assert !(mat.id in [material.id for material in materials])
         push!(materials, mat)
