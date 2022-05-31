@@ -30,9 +30,9 @@ function parse_input(path::String)
     @show global horizon = input["horizon"]
 
     # Parse materials
-    materials::Vector{Materials.AbstractMaterial} = Vector{Materials.AbstractMaterial}()
+    global materials = Vector{Materials.AbstractMaterial}()
 
-    defaultMaterial = parse_material(input["MaterialDefault"])
+    global defaultMaterial = parse_material(input["MaterialDefault"])
     push!(materials, defaultMaterial)
 
     for materialInput in input["Material"]
@@ -43,7 +43,7 @@ function parse_input(path::String)
     end
 
     # Parse grids
-    nodes::Vector{Nodes.AbstractNode} = Vector{Nodes.AbstractNode}()
+    global nodes = Vector{Nodes.AbstractNode}()
     for input_grid_object in input["Grid"]
         input_grid = CSV.File(input_grid_object["path"], stripwhitespace=true,  comment="#")
 
@@ -70,11 +70,12 @@ function parse_input(path::String)
     end
 
     # Parse BCs
-    boundaryConditions = Vector{BoundaryConditions.AbstractBoundaryCondition}()
-    print("node size: ", size(nodes))
+    global boundaryConditions = Vector{BoundaryConditions.AbstractBoundaryCondition}()
     for bc in input["BC"]
         push!(boundaryConditions, BoundaryConditions.parse_bc(bc, nodes))
+        # println(typeof(last(boundaryConditions)))
     end
+    println("Created ", length(boundaryConditions), " boundary conditions")
 
 
     # Other (force planes, etc.)
