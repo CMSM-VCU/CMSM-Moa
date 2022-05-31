@@ -3,7 +3,7 @@ gridspacing = 2.0
 horizon = 6.03
 
 [[Grid]]
-    path = "twopoints.grid"
+    path = "testgrid.grid"
 
 [MaterialDefault]
     type = "LinearElastic"
@@ -28,11 +28,16 @@ horizon = 6.03
 [[BC]]
     type = "Displacement"
     displacement = [0, 0, 0]
-    volume = [0,0,0,0,0,0]
+    volume = [10,-10,10,-10,10,-10]
 
 [[BC]]
     type = "Velocity"
     velocity = [0, 0, 0]
-    volume = [0,0,0,0,0,0]
+    volume = [0, 0, 0, 0, 0, 0]
+
+[[ForceProbe]]
+    type = "Plane"
+    point = [0, 0, 0]
+    normal = [1, 0, 0]
 
 [Output]
