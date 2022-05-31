@@ -20,7 +20,7 @@ horizon = 6.03
     critical_strain = 0.14
 
 [[Material]]
-    type = "CustomMaterial"
+    type = "Custom"
     id = 3
     density = 12.2
 
@@ -28,13 +28,11 @@ horizon = 6.03
 [[BC]]
     type = "Displacement"
     displacement = [0, 0, 0]
-    [[BC.include]]
-        sphere = [0,0,0,10]
-    [[BC.exclude]]
-        cuboid = [0, 0, 0, 1, 1, 1]
-    [[BC.exclude]]
-        sphere = [0, 0, 0, 1, 1, 1]
-    [[BC.exclude]]
-        material = 1
+    volume = [0,0,0,0,0,0]
+
+[[BC]]
+    type = "Velocity"
+    velocity = [0, 0, 0]
+    volume = [0,0,0,0,0,0]
 
 [Output]

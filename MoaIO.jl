@@ -9,7 +9,7 @@ function parse_material(inputDict)
 
     if inputDict["type"] == "LinearElastic"
         return Materials.LinearEalstic(inputDict["id"], inputDict["density"], inputDict["critical_strain"], inputDict["bond_constant"])
-    elseif inputDict["type"] == "CustomMaterial"
+    elseif inputDict["type"] == "Custom"
         return Materials.CustomMaterial(inputDict["id"], inputDict["density"])
     else
         # Material type not known
@@ -17,6 +17,7 @@ function parse_material(inputDict)
         throw(Exception)
     end
 end
+
 
 
 function parse_input(path::String)
@@ -59,14 +60,15 @@ function parse_input(path::String)
                         mat,
                         gridspacing
                     )
-                 )
+                )
         end
     end
 
-    # # Parse BCs
-    # for bc in input["BC"]
-        
-    # end
+    # Parse BCs
+    boundaryConditions = Vector{BoundaryConditions.AbstractBoundaryCondition}()
+    for bc in input["BC"]
+        push!(boundaryConditions, BoundaryConditions.parse_bc(bc, nodes))
+    end
 
 
     # Other (force planes, etc.)
