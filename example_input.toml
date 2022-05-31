@@ -12,17 +12,17 @@ horizon = 6.03
     bond_constant = 1.0
     critical_strain = 0.2
     
-[[Material]]
-    type = "LinearElastic"
-    id = 2
-    density = 12.2
-    bond_constant = 3.1
-    critical_strain = 0.14
-
-[[Material]]
-    type = "Custom"
-    id = 3
-    density = 12.2
+#[[Material]]
+#    type = "LinearElastic"
+#    id = 2
+#    density = 12.2
+#    bond_constant = 3.1
+#    critical_strain = 0.14
+#
+#[[Material]]
+#    type = "Custom"
+#    id = 3
+#    density = 12.2
 
 [[BC]]
     type = "Velocity"
