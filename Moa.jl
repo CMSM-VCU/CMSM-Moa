@@ -4,6 +4,7 @@ include("Nodes.jl")
 include("Bonds.jl")
 include("ProximitySearch.jl")
 include("BoundaryConditions.jl")
-include("MoaIO.jl")
+include("ForceProbes.jl")
 include("TimeIntegration.jl")
+include("MoaIO.jl")
 end
