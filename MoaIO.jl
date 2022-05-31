@@ -16,11 +16,13 @@ function parse_input(path::String)
     global defaultMaterial = Materials.parse_material(input["MaterialDefault"])
     push!(materials, defaultMaterial)
 
-    for materialInput in input["Material"]
-        mat::Materials.AbstractMaterial = Materials.parse_material(materialInput)
-        # Each material should have a unique id
-        @assert !(mat.id in [material.id for material in materials])
-        push!(materials, mat)
+    if haskey(input, "Material")
+        for materialInput in input["Material"]
+            mat::Materials.AbstractMaterial = Materials.parse_material(materialInput)
+            # Each material should have a unique id
+            @assert !(mat.id in [material.id for material in materials])
+            push!(materials, mat)
+        end
     end
 
     # Parse grids
@@ -39,7 +41,8 @@ function parse_input(path::String)
             if size(material_candidates)[1] != 0
                 mat = first(material_candidates)
             end
-            push!(nodes, Nodes.Node(
+            push!(nodes, 
+                    Nodes.Node(
                         Float64(row[:x]),
                         Float64(row[:y]),
                         Float64(row[:z]),
