@@ -6,12 +6,12 @@ using ..Nodes
 abstract type AbstractBond end
 
 mutable struct Bond <: AbstractBond
-    from::Nodes.Node
-    to::Nodes.Node
+    from::Nodes.AbstractNode
+    to::Nodes.AbstractNode
     isBroken::Bool
 end
 
-Bond(from::Nodes.Node, to::Nodes.Node) = Bond(from, to, false)
+Bond(from::Nodes.AbstractNode, to::Nodes.AbstractNode) = Bond(from, to, false)
 
 function get_strain(bond::Bond)
     initial_bond_length = norm(bond.to.position - bond.from.position)
