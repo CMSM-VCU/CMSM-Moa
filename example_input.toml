@@ -1,9 +1,8 @@
-dimension = 1
 gridspacing = 2.0
 horizon = 6.03
 
 [[Grid]]
-    path = "testgrid.grid"
+    path = "twopoints.grid"
 
 [MaterialDefault]
     type = "LinearElastic"
@@ -11,33 +10,21 @@ horizon = 6.03
     density = 10.4
     bond_constant = 1.0
     critical_strain = 0.2
-    
-#[[Material]]
-#    type = "LinearElastic"
-#    id = 2
-#    density = 12.2
-#    bond_constant = 3.1
-#    critical_strain = 0.14
-#
-#[[Material]]
-#    type = "Custom"
-#    id = 3
-#    density = 12.2
 
-[[BC]]
-    type = "Velocity"
-    velocity = [0, 0, 0]
-    volume = [10, 20, -10, 10, -10, 10]
+#[[BC]]
+#    type = "Velocity"
+#    velocity = [0, 0, 0]
+#    volume = [10, 20, -10, 10, -10, 10]
 
 [[BC]]
     type = "Displacement"
     displacement = [0, 0, 0]
-    volume = [-10,10,-10,10,-10,10]
+    volume = [-0.5,0.5,-1,1,-1,1]
 
 
 [[ForceProbe]]
     type = "Plane"
-    pointOnPlane = [0, 0, 0]
+    pointOnPlane = [0.5, 0, 0]
     normal = [1, 0, 0]
 
-[Output]
+
