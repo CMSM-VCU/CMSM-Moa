@@ -18,6 +18,17 @@ function signed_distance_from_plane(point::Vector{Float64}, pointOnPlane::Vector
     return LinearAlgebra.dot(point, normal) - LinearAlgebra.dot(pointOnPlane, normal)
 end
 
+function measure_force(fp::ForceProbePlane)
+    force = 0
+    for bond in fp.bondsPositive
+        force += LinearAlgebra.dot(Bonds.get_force(bond), fp.normal)
+    end
+    for bond in fp.bondsNegative
+        force -= LinearAlgebra.dot(Bonds.get_force(bond), fp.normal)
+    end
+    return force * 0.5
+end
+
 function parse_force_probe_plane(inputDict, bonds)
     pointOnPlane::Vector{Float64} = inputDict["pointOnPlane"]
     normal::Vector{Float64} = inputDict["normal"]
