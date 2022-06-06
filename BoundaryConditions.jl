@@ -13,6 +13,7 @@ end
 function apply_bc(bc::DisplacementBoundaryCondition)
     Threads.@threads for node in bc.nodes
         node.displacement = bc.displacement
+        # Is this faster than creating a new vector of zeros?
         node.velocity *= 0
     end
 end
