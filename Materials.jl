@@ -2,7 +2,7 @@ module Materials
 
 abstract type AbstractMaterial end
 
-struct LinearEalstic <: AbstractMaterial
+struct LinearElastic <: AbstractMaterial
     id::Int64
     density::Float64
     critical_strain::Float64
@@ -21,7 +21,7 @@ function parse_material(inputDict)
     @assert haskey(inputDict, "id")
 
     if inputDict["type"] == "LinearElastic"
-        return Materials.LinearEalstic(inputDict["id"], inputDict["density"], inputDict["critical_strain"], inputDict["bond_constant"])
+        return Materials.LinearElastic(inputDict["id"], inputDict["density"], inputDict["critical_strain"], inputDict["bond_constant"])
     elseif inputDict["type"] == "Custom"
         return Materials.CustomMaterial(inputDict["id"], inputDict["density"])
     else
