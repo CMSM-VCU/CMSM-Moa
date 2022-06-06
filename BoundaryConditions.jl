@@ -13,6 +13,7 @@ end
 function apply_bc(bc::DisplacementBoundaryCondition)
     Threads.@threads for node in bc.nodes
         node.displacement = bc.displacement
+        node.velocity *= 0
     end
 end
 
