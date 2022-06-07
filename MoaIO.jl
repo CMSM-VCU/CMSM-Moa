@@ -58,7 +58,9 @@ function parse_input(path::String)
     cell_list = ProximitySearch.create_cell_list(nodes, horizon)
     for node in nodes
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
-            push!(bonds, Bonds.Bond(node, other, false))
+            b::Bonds.Bond = Bonds.Bond(node, other, false)
+            push!(bonds, b)
+            push!(node.family, b)
         end
     end
     println("Created ", length(bonds), " bonds")
