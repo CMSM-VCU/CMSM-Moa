@@ -54,7 +54,7 @@ function parse_input(path::String)
     end
 
     # Create bonds
-    global bonds = Vector{Bonds.AbstractBond}()
+    global bonds = Vector{AbstractTypes.ABond}()
     cell_list = ProximitySearch.create_cell_list(nodes, horizon)
     for node in nodes
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)

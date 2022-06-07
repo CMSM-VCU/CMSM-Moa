@@ -2,10 +2,9 @@ module Bonds
 
 using LinearAlgebra
 using ..Nodes
+using ..AbstractTypes
 
-abstract type AbstractBond end
-
-mutable struct Bond <: AbstractBond
+mutable struct Bond <: AbstractTypes.ABond
     from::Nodes.AbstractNode
     to::Nodes.AbstractNode
     isBroken::Bool

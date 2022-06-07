@@ -1,4 +1,5 @@
 module Moa
+include("AbstractTypes.jl")
 include("Materials.jl")
 include("Nodes.jl")
 include("Bonds.jl")

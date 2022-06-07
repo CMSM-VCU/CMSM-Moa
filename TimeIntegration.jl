@@ -1,6 +1,6 @@
 module TimeIntegration
 
-using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions
+using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes
 
 # function dynamic_stable_timestep()
 
@@ -53,7 +53,7 @@ function dynamic_integration(nodes, bonds, bcs, dt)
 end
 
 function adr(nodes::Vector{Nodes.AbstractNode},
-                bonds::Vector{Bonds.AbstractBond},
+                bonds::Vector{AbstractTypes.ABond},
                 bcs::Vector{BoundaryConditions.AbstractBoundaryCondition},
                 dt::Float64,
                 stale::Bool)

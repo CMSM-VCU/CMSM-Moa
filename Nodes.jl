@@ -2,6 +2,7 @@ module Nodes
 
 using StaticArrays
 using ..Materials
+using ..AbstractTypes
 
 abstract type AbstractNode end
 
@@ -17,6 +18,8 @@ mutable struct Node <: AbstractNode
 
     volume::Float64
     material::Materials.AbstractMaterial
+
+    family::Vector{AbstractTypes.ABond}
 end
 
 # Some constructors
@@ -29,7 +32,8 @@ Node(x::Float64, y::Float64, z::Float64, m::Materials.AbstractMaterial, grid_spa
     [0,0,0],
     [0,0,0],
     grid_spacing^3,
-    m)
+    m,
+    [])
 
 Node(pos::MVector{3, Float64}, m::Materials.AbstractMaterial, grid_spacing::Float64) = Node(
     pos,
@@ -40,7 +44,8 @@ Node(pos::MVector{3, Float64}, m::Materials.AbstractMaterial, grid_spacing::Floa
     [0,0,0],
     [0,0,0],
     grid_spacing^3,
-    m)
+    m,
+    [])
 
 
 function mass(node::Node)
