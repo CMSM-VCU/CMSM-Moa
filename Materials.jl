@@ -2,14 +2,22 @@ module Materials
 
 abstract type AbstractMaterial end
 
-struct LinearElastic <: AbstractMaterial
+mutable struct LinearElastic <: AbstractMaterial
     id::Int64
     density::Float64
     critical_strain::Float64
     bond_constant::Float64
 end
 
-struct CustomMaterial <: AbstractMaterial
+Base.copy(material::LinearElastic) = LinearElastic(
+        material.id,
+        material.density,
+        material.critical_strain,
+        material.bond_constant)
+
+
+
+mutable struct CustomMaterial <: AbstractMaterial
     id::Int64
     density::Float64
 end

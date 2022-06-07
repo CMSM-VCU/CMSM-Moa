@@ -40,6 +40,11 @@ function parse_input(path::String)
             material_candidates = [material for material in materials if material.id == row[:material]]
             if size(material_candidates)[1] != 0
                 mat = first(material_candidates)
+            else
+                # Create copy of default material with new material number
+                mat = copy(defaultMaterial)
+                mat.id = row[:material]
+                push!(materials, mat)
             end
             push!(nodes, 
                     Nodes.Node(
