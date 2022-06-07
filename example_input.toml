@@ -9,12 +9,12 @@ horizon = 6.03
     id = 1
     density = 10.4
     bond_constant = 1.0
-    critical_strain = 0.2
+    critical_strain = 1.2
 
-#[[BC]]
-#    type = "Velocity"
-#    velocity = [0, 0, 0]
-#    volume = [10, 20, -10, 10, -10, 10]
+[[BC]]
+    type = "Displacement"
+    displacement = [0, 0, 0]
+    volume = [1.5,2.5,-1,1,-1,1]
 
 [[BC]]
     type = "Displacement"

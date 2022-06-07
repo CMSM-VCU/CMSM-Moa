@@ -110,7 +110,7 @@ function adr(nodes::Vector{Nodes.AbstractNode},
         if stale
             averageVelocity = 0.5 * dt * node.force / node.stableMass
         else
-            averageVelocity = (2.0 - cn * dt) * node.oldAverageVelocity + 2.0 * (dt / node.stableMass) * (node.force / (2.0 + cn * dt))
+            averageVelocity = ((2.0 - cn * dt) * node.oldAverageVelocity + 2.0 * (dt / node.stableMass) * node.force) / (2.0 + cn * dt)
         end
         node.velocity = 0.5 * (node.oldAverageVelocity + averageVelocity)
         node.displacement += averageVelocity * dt
@@ -121,7 +121,7 @@ function adr(nodes::Vector{Nodes.AbstractNode},
                 BoundaryConditions.apply_bc(bc)
             end
         end
-
+        
         node.oldAverageVelocity = copy(averageVelocity)
         node.oldForce = copy(node.force)
     end
