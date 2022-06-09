@@ -29,7 +29,6 @@ function parse_input(path::String)
     global nodes = Vector{Nodes.AbstractNode}()
     for input_grid_object in input["Grid"]
         input_grid = CSV.File(input_grid_object["path"], stripwhitespace=true,  comment="#")
-
         # Required columns in grid file
         @assert :x in input_grid.names
         @assert :y in input_grid.names
@@ -61,29 +60,42 @@ function parse_input(path::String)
     # Create bonds
     global bonds = Vector{AbstractTypes.ABond}()
     cell_list = ProximitySearch.create_cell_list(nodes, horizon)
-    for node in nodes
+    println("CREATING BONDS...")
+    print("0")
+    parallel_bond_lists = Vector{Vector{AbstractTypes.ABond}}
+    for i in 1:Threads.nthreads()
+        push!(parallel_bond_lists)
+    end
+
+    Threads.@threads for (i, node) in enumerate(nodes)
+        print("\r",i)
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
             b::Bonds.Bond = Bonds.Bond(node, other, false)
-            push!(bonds, b)
+            push!(parallel_bond_lists[Threads.threadid()], b)
             push!(node.family, b)
         end
     end
+    bonds = vcat(parallel_bond_lists...)
     println("Created ", length(bonds), " bonds")
 
 
     # Parse BCs
     global boundaryConditions = Vector{BoundaryConditions.AbstractBoundaryCondition}()
-    for bc in input["BC"]
-        push!(boundaryConditions, BoundaryConditions.parse_bc(bc, nodes))
-        # println(typeof(last(boundaryConditions)))
+    if haskey(input, "BC")
+        for bc in input["BC"]
+            push!(boundaryConditions, BoundaryConditions.parse_bc(bc, nodes))
+            # println(typeof(last(boundaryConditions)))
+        end
     end
     println("Created ", length(boundaryConditions), " boundary conditions")
 
 
     # Other (force planes, etc.)
     global forceProbes = Vector{ForceProbes.AbstractForceProbe}()
-    for forceProbe in input["ForceProbe"]
-        push!(forceProbes, ForceProbes.parse_force_probe_plane(forceProbe, bonds))
+    if haskey(input, "ForceProbe")
+        for forceProbe in input["ForceProbe"]
+            push!(forceProbes, ForceProbes.parse_force_probe_plane(forceProbe, bonds))
+        end
     end
     println("Created ", length(forceProbes), " force probes")
 

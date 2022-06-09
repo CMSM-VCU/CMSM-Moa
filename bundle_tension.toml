@@ -3,8 +3,6 @@ horizon = 3.014
 
 [[Grid]]
     path = "testgrid.grid"
-[[Grid]]
-    path = "testgrid.grid"
 
 [MaterialDefault]
     type = "custom"

@@ -17,22 +17,19 @@ for node in Moa.nodes
     node.stableMass = Moa.Nodes.stableMass(node, dt, Moa.horizon, Moa.gridspacing)
 end
 for i in 1:300
-    print("\r",i)
-    # Moa.TimeIntegration.dynamic_integration(Moa.nodes,Moa.bonds, Moa.boundaryConditions, 0.1)
-    if i == 1
-        Moa.TimeIntegration.adr(Moa.nodes,Moa.bonds, Moa.boundaryConditions, dt, true)
-    else
-        Moa.TimeIntegration.adr(Moa.nodes,Moa.bonds, Moa.boundaryConditions, dt, false)
-    end
     push!(disphis_a, Moa.nodes[1].position[1] + Moa.nodes[1].displacement[1])
     push!(disphis_b, Moa.nodes[2].position[1] + Moa.nodes[2].displacement[1])
     push!(forces, Moa.ForceProbes.measure_force(Moa.forceProbes[1]))
     push!(pforce, Moa.nodes[2].force[1])
+    print("\r",i)
+    Moa.TimeIntegration.dynamic_integration(Moa.nodes,Moa.bonds, Moa.boundaryConditions, 0.1)
+    # if i == 1
+    #     Moa.TimeIntegration.adr(Moa.nodes,Moa.bonds, Moa.boundaryConditions, dt, true)
+    # else
+    #     Moa.TimeIntegration.adr(Moa.nodes,Moa.bonds, Moa.boundaryConditions, dt, false)
+    # end
 end
 
-
-
-default(show=true)
 
 plot(disphis_a)
 plot!(disphis_b)

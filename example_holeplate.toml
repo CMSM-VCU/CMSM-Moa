@@ -1,0 +1,16 @@
+gridspacing = 1.0
+horizon = 3.015
+
+
+[[Grid]]
+    path = "holeplate.grid"
+
+[MaterialDefault]
+    type = "LinearElastic"
+    id = 1
+    density = 10.4
+    bond_constant = 1.0
+    critical_strain = 0.2
+
+
+
