@@ -52,7 +52,7 @@ function dynamic_integration(nodes, bonds, bcs, dt)
 
 end
 
-function adr(nodes::Vector{Nodes.AbstractNode},
+function adr(nodes::Vector{Nodes.Node},
                 bonds::Vector{AbstractTypes.ABond},
                 bcs::Vector{BoundaryConditions.AbstractBoundaryCondition},
                 dt::Float64,
@@ -65,30 +65,35 @@ function adr(nodes::Vector{Nodes.AbstractNode},
     
     # Apply bond force to nodes
     Threads.@threads for bond in bonds
-        Bonds.apply_force(bond)
+-        Bonds.apply_force(bond)
     end
 
 
     # Calculates factor
     cn = 0.0
-    cn1 = 0.0
-    cn2 = 0.0
 
-    for node in nodes
+
+    cn1s = zeros(Threads.nthreads())
+    cn2s = zeros(Threads.nthreads())
+    Threads.@threads for node in nodes
         # Need old force and old average velocty
         if node.oldAverageVelocity[1] != 0
-            cn1 -= (node.displacement[1]^2 * (node.force[1] - node.oldForce[1])) / (dt * node.oldAverageVelocity[1] * node.stableMass)
+            cn1s[Threads.threadid()] -= (node.displacement[1]^2 * (node.force[1] - node.oldForce[1])) / (dt * node.oldAverageVelocity[1] * node.stableMass)
         end
         if node.oldAverageVelocity[2] != 0
-            cn1 -= (node.displacement[2]^2 * (node.force[2] - node.oldForce[2])) / (dt * node.oldAverageVelocity[2] * node.stableMass)
+            cn1s[Threads.threadid()] -= (node.displacement[2]^2 * (node.force[2] - node.oldForce[2])) / (dt * node.oldAverageVelocity[2] * node.stableMass)
         end
         if node.oldAverageVelocity[3] != 0
-            cn1 -= (node.displacement[3]^2 * (node.force[3] - node.oldForce[3])) / (dt * node.oldAverageVelocity[3] * node.stableMass)
+            cn1s[Threads.threadid()] -= (node.displacement[3]^2 * (node.force[3] - node.oldForce[3])) / (dt * node.oldAverageVelocity[3] * node.stableMass)
         end
         # cn1 += sum(node.displacement .^ 2 .* (node.force - node.oldForce) / Nodes.mass(node))
 
-        cn2 += sum(node.displacement .^ 2)
+        cn2s[Threads.threadid()] += sum(node.displacement .^ 2)
     end
+
+    cn1 = sum(cn1s)
+    cn2 = sum(cn2s)
+
 
     if cn2 != 0.0
         if cn1 / cn2 > 0.0
@@ -106,26 +111,34 @@ function adr(nodes::Vector{Nodes.AbstractNode},
         # else
         #     velhalf = (2.0 - cn * dt) * node.oldAverageVelocity + 2.0 * dt / Nodes.mass(node)
         # end
-        averageVelocity = zeros(3)
+        averageVelocity::Vector{Float64} = [0.0, 0.0, 0.0]
         if stale
             averageVelocity = 0.5 * dt * node.force / node.stableMass
         else
             averageVelocity = ((2.0 - cn * dt) * node.oldAverageVelocity + 2.0 * (dt / node.stableMass) * node.force) / (2.0 + cn * dt)
         end
         node.velocity = 0.5 * (node.oldAverageVelocity + averageVelocity)
-        node.displacement += averageVelocity * dt
+        node.displacement .+= averageVelocity * dt
 
-        # Displacement BCs
-        for bc in bcs
-            if bc isa BoundaryConditions.DisplacementBoundaryCondition
-                BoundaryConditions.apply_bc(bc)
-            end
-        end
-        
         node.oldAverageVelocity = copy(averageVelocity)
         node.oldForce = copy(node.force)
     end
+
+    
+    # Displacement BCs
+    for bc in bcs
+        if bc isa BoundaryConditions.DisplacementBC
+            BoundaryConditions.apply_bc(bc)
+        elseif bc isa BoundaryConditions.StagedLoadingBC
+            for node in bc.nodes
+                node.displacement = bc.currentDisplacement
+                node.velocity = zeros(3)
+                node.oldAverageVelocity = zeros(3)
+            end
+        end
+    end
 end
+
 
 
 end

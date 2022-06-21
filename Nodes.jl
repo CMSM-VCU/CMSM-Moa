@@ -4,9 +4,10 @@ using StaticArrays
 using ..Materials
 using ..AbstractTypes
 
-abstract type AbstractNode end
+# abstract type AbstractNode end
 
-mutable struct Node <: AbstractNode
+# mutable struct Node <: AbstractNode
+mutable struct Node
     position::MVector{3, Float64}
     displacement::MVector{3, Float64}
     velocity::MVector{3, Float64}

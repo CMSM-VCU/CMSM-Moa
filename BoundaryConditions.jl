@@ -1,16 +1,17 @@
 module BoundaryConditions
+using LinearAlgebra
 using ..Materials
 using ..Nodes
 using ..Bonds
 
 abstract type AbstractBoundaryCondition end
 
-struct DisplacementBoundaryCondition <: AbstractBoundaryCondition
+struct DisplacementBC <: AbstractBoundaryCondition
     nodes::Vector{Nodes.Node}
     displacement::Vector{Float64}
 end
 
-function apply_bc(bc::DisplacementBoundaryCondition)
+function apply_bc(bc::DisplacementBC)
     Threads.@threads for node in bc.nodes
         node.displacement = bc.displacement
         # Is this faster than creating a new vector of zeros?
@@ -19,22 +20,33 @@ function apply_bc(bc::DisplacementBoundaryCondition)
 end
 
 
-
-struct VelocityBoundaryCondition <: AbstractBoundaryCondition
+struct VelocityBC <: AbstractBoundaryCondition
     nodes::Vector{Nodes.Node}
     velocity::Vector{Float64}
 end
 
-function apply_bc(bc::VelocityBoundaryCondition)
+function apply_bc(bc::VelocityBC)
     Threads.@threads for node in bc.nodes
         node.velocity = bc.velocity
     end
 end
 
+mutable struct StagedLoadingBC <: AbstractBoundaryCondition
+    nodes::Vector{Nodes.Node}
+    currentDisplacement::Vector{Float64}
+    increment::Vector{Float64}
+end
+
+function apply_bc(bc::StagedLoadingBC)
+    bc.currentDisplacement += bc.increment
+    Threads.@threads for node in bc.nodes
+        node.displacement += bc.increment
+    end
+end
 
 function get_nodes_within_volume(nodes, volume)
     # Push all relevant nodes
-    n::Vector{Nodes.AbstractNode} = Vector{Nodes.AbstractNode}()
+    n::Vector{Nodes.Node} = Vector{Nodes.Node}()
     for node in nodes
         if  node.position[1] > volume[1] &&
             node.position[1] < volume[2] &&
@@ -56,15 +68,21 @@ function parse_bc(inputDict, nodes)
     @assert haskey(inputDict, "type")
     @assert haskey(inputDict, "volume")
 
-    relevant_nodes::Vector{Nodes.AbstractNode} = get_nodes_within_volume(nodes, inputDict["volume"])
+    relevant_nodes::Vector{Nodes.Node} = get_nodes_within_volume(nodes, inputDict["volume"])
 
 
     if inputDict["type"] == "Displacement"
         @assert haskey(inputDict, "displacement")
-        return BoundaryConditions.DisplacementBoundaryCondition(relevant_nodes, inputDict["displacement"])
+        return DisplacementBC(relevant_nodes, inputDict["displacement"])
+
     elseif inputDict["type"] == "Velocity"
         @assert haskey(inputDict, "velocity")
-        return BoundaryConditions.VelocityBoundaryCondition(relevant_nodes, inputDict["velocity"])
+        return VelocityBC(relevant_nodes, inputDict["velocity"])
+
+    elseif inputDict["type"] == "Staged Loading"
+        @assert haskey(inputDict, "increment")
+        return StagedLoadingBC(relevant_nodes, zeros(3), inputDict["increment"])
+
     else
         println("Unknown boundary condition type: ", inputDict["type"])
         @assert false

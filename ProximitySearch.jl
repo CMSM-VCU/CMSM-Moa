@@ -5,13 +5,13 @@ using LinearAlgebra
 
 
 struct CellList
-    data::Array{Vector{Nodes.AbstractNode}, 3}
+    data::Array{Vector{Nodes.Node}, 3}
     division_size::Float64
     data_min::Vector{Float64}
     data_max::Vector{Float64}
 end
 
-function create_cell_list(nodes::Vector{Nodes.AbstractNode}, radius::Float64)
+function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64)
     # Can be optimized
     positions = [node.position + node.displacement for node in nodes]
     dim_max = copy(positions[1])
@@ -39,9 +39,9 @@ function create_cell_list(nodes::Vector{Nodes.AbstractNode}, radius::Float64)
     shape = (dim_max - dim_min) / radius
     size1,size2,size3 = Int64(ceil(shape[1]))+1, Int64(ceil(shape[2]))+1,Int64(ceil(shape[3]))+1
 
-    data = Array{Vector{Nodes.AbstractNode}}(undef,size1,size2,size3);
+    data = Array{Vector{Nodes.Node}}(undef,size1,size2,size3);
     for i in eachindex(data)
-        data[i] = Vector{Nodes.AbstractNode}()
+        data[i] = Vector{Nodes.Node}()
     end
 
 
@@ -59,7 +59,7 @@ function create_cell_list(nodes::Vector{Nodes.AbstractNode}, radius::Float64)
     return CellList(data, radius, dim_min, dim_max)
 end
 
-function sample_cell_list(cell_list::CellList, node::Nodes.AbstractNode, radius::Float64)
+function sample_cell_list(cell_list::CellList, node::Nodes.Node, radius::Float64)
     pos = node.position + node.displacement
     index = [
         Int64(ceil((pos[1] - cell_list.data_min[1]) / radius))+1,
@@ -67,7 +67,7 @@ function sample_cell_list(cell_list::CellList, node::Nodes.AbstractNode, radius:
         Int64(ceil((pos[3] - cell_list.data_min[3]) / radius))+1
         ]   
     shape = size(cell_list.data)
-    result = Vector{Nodes.AbstractNode}()
+    result = Vector{Nodes.Node}()
 
     for i in -1:1
         if index[1]+i > 0 && index[1]+i <= shape[1]

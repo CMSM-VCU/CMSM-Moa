@@ -1,16 +1,17 @@
 module Bonds
 
-using LinearAlgebra
+using StaticArrays: SVector
+using LinearAlgebra: norm
 using ..Nodes
 using ..AbstractTypes
 
 mutable struct Bond <: AbstractTypes.ABond
-    from::Nodes.AbstractNode
-    to::Nodes.AbstractNode
+    from::Nodes.Node
+    to::Nodes.Node
     isBroken::Bool
 end
 
-Bond(from::Nodes.AbstractNode, to::Nodes.AbstractNode) = Bond(from, to, false)
+Bond(from::Nodes.Node, to::Nodes.Node) = Bond(from, to, false)
 
 function get_strain(bond::Bond)
     initial_bond_length = norm(bond.to.position - bond.from.position)
@@ -26,14 +27,14 @@ function get_force(bond::Bond)
     end
 
     # Duplicated code here from get_strain because it uses intermediate calculations
-    initial_bond_length = norm(bond.to.position - bond.from.position)
-    deformed_bond_vector = (bond.to.position + bond.to.displacement) - (bond.from.position + bond.from.displacement)
-    deformed_bond_length = norm(deformed_bond_vector)
-    strain = (deformed_bond_length - initial_bond_length) / initial_bond_length
+    initial_bond_length::Float64 = norm(bond.to.position - bond.from.position)
+    deformed_bond_vector::SVector{3, Float64} = bond.to.position + bond.to.displacement - bond.from.position - bond.from.displacement
+    deformed_bond_length::Float64 = norm(deformed_bond_vector)
+    strain::Float64 = (deformed_bond_length - initial_bond_length) / initial_bond_length
 
-    direction = deformed_bond_vector / deformed_bond_length
+    direction::SVector{3,Float64} = deformed_bond_vector ./ deformed_bond_length
 
-    return minimum([bond.from.material.bond_constant, bond.to.material.bond_constant]) * strain * direction * bond.to.volume * bond.from.volume
+    return  direction * (min(bond.from.material.bond_constant, bond.to.material.bond_constant) * strain * bond.to.volume * bond.from.volume)
 end
 
 "Applies the bond's force to its from node (ATOMIC OPERATION, THREAD SAFE)"
