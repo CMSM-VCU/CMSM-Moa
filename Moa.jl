@@ -8,4 +8,5 @@ include("BoundaryConditions.jl")
 include("ForceProbes.jl")
 include("TimeIntegration.jl")
 include("MoaIO.jl")
+include("MoaUtil.jl")
 end
