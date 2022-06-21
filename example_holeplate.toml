@@ -1,5 +1,5 @@
-gridspacing = 1.0
-horizon = 3.015
+gridspacing = 0.2
+horizon = 0.603
 
 
 [[Grid]]
@@ -12,5 +12,12 @@ horizon = 3.015
     bond_constant = 1.0
     critical_strain = 0.2
 
+[[BC]]
+    type = "Staged Loading"
+    increment = [-0.1, 0.0, 0.0]
+    volume = [-65,-59,-9999,9999,-9999,9999]
 
-
+[[BC]]
+    type = "Staged Loading"
+    increment = [0.1, 0.0, 0.0]
+    volume = [59,65,-9999, 9999,-9999,9999]
