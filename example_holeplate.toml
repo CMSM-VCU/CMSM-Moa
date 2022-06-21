@@ -10,14 +10,14 @@ horizon = 3.015
     id = 1
     density = 10.4
     bond_constant = 1.0
-    critical_strain = 0.2
+    critical_strain = 0.01
 
 [[BC]]
     type = "Staged Loading"
-    increment = [-0.1, 0.0, 0.0]
+    increment = [-0.025, 0.0, 0.0]
     volume = [-65,-57,-9999,9999,-9999,9999]
 
 [[BC]]
     type = "Staged Loading"
-    increment = [0.1, 0.0, 0.0]
+    increment = [0.025, 0.0, 0.0]
     volume = [57,65,-9999, 9999,-9999,9999]

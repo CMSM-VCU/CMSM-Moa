@@ -19,10 +19,10 @@ function GetDamageVector(nodes::Vector{Nodes.Node})
                 numbrokenbonds += 1
             end
         end
-        if numbrokenbonds == 0
-            push!(dmg, 0.0)
+        if numbonds == 0
+            push!(dmg, -1.0)
         else
-            push!(dmg, numbonds / numbrokenbonds)
+            push!(dmg, numbrokenbonds / numbonds)
         end
     end
     return dmg

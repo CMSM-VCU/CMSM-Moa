@@ -154,6 +154,7 @@ function relax(nodes, bonds, bcs, kethreshold)
         count += 1
         print("\r", count, " : ", kinetic_energy)
     end
+    println("\nFinished realxation!")
 end
 
 end
