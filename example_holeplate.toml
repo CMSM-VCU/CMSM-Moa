@@ -1,5 +1,5 @@
-gridspacing = 0.2
-horizon = 0.603
+gridspacing = 1.0
+horizon = 3.015
 
 
 [[Grid]]
@@ -15,9 +15,9 @@ horizon = 0.603
 [[BC]]
     type = "Staged Loading"
     increment = [-0.1, 0.0, 0.0]
-    volume = [-65,-59,-9999,9999,-9999,9999]
+    volume = [-65,-57,-9999,9999,-9999,9999]
 
 [[BC]]
     type = "Staged Loading"
     increment = [0.1, 0.0, 0.0]
-    volume = [59,65,-9999, 9999,-9999,9999]
+    volume = [57,65,-9999, 9999,-9999,9999]

@@ -1,6 +1,6 @@
 module TimeIntegration
 
-using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes
+using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes, ..MoaUtil
 
 # function dynamic_stable_timestep()
 
@@ -65,7 +65,7 @@ function adr(nodes::Vector{Nodes.Node},
     
     # Apply bond force to nodes
     Threads.@threads for bond in bonds
--        Bonds.apply_force(bond)
+        Bonds.apply_force(bond)
     end
 
 
@@ -130,15 +130,30 @@ function adr(nodes::Vector{Nodes.Node},
         if bc isa BoundaryConditions.DisplacementBC
             BoundaryConditions.apply_bc(bc)
         elseif bc isa BoundaryConditions.StagedLoadingBC
-            for node in bc.nodes
+            Threads.@threads for node in bc.nodes
                 node.displacement = bc.currentDisplacement
                 node.velocity = zeros(3)
                 node.oldAverageVelocity = zeros(3)
+                @atomic node.force = zeros(3)
             end
         end
     end
 end
 
+function relax(nodes, bonds, bcs, kethreshold)
+    println("Relaxing system...")
 
+    adr(nodes, bonds,bcs, 9999., true)
+    
+    kinetic_energy = MoaUtil.KineticEnergy(nodes)
+    count = 1
+
+    while kinetic_energy > kethreshold
+        TimeIntegration.adr(nodes, bonds, bcs, 9999., false)
+        kinetic_energy = MoaUtil.KineticEnergy(nodes)
+        count += 1
+        print("\r", count, " : ", kinetic_energy)
+    end
+end
 
 end

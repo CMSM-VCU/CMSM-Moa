@@ -16,6 +16,7 @@ function apply_bc(bc::DisplacementBC)
         node.displacement = bc.displacement
         # Is this faster than creating a new vector of zeros?
         node.velocity *= 0
+        @atomic node.force = zeros(3)
     end
 end
 

@@ -1,5 +1,6 @@
 # START
 include("Moa.jl")
+include("Visualize.jl")
 Moa.parse_input("example_holeplate.toml")
 dt = 9999.
 for node in Moa.nodes
@@ -8,55 +9,29 @@ end
 
 # Increment SL stage:
 
-for bc in Moa.boundaryConditions
-    if bc isa Moa.BoundaryConditions.StagedLoadingBC
-        Moa.BoundaryConditions.apply_bc(bc)
+for i in 1:100
+    for bc in Moa.boundaryConditions
+        if bc isa Moa.BoundaryConditions.StagedLoadingBC
+            Moa.BoundaryConditions.apply_bc(bc)
+        end
     end
 end
-
 #  Relax setup
 using Profile
 Profile.clear()
 # kehis = Vector{Float64}()
+print(Moa.MoaUtil.GetDamageVector(Moa.nodes))
 Moa.TimeIntegration.adr(Moa.nodes, Moa.bonds, Moa.boundaryConditions, 9999., true)
 
-# Relax
-
-
-for i in 1:100
-    # @profview Moa.TimeIntegration.adr(Moa.nodes, Moa.bonds, Moa.boundaryConditions, 9999., false)
-    @profile Moa.TimeIntegration.adr(Moa.nodes, Moa.bonds, Moa.boundaryConditions, 1., false)
-    println(i)
-    # push!(kehis, Moa.MoaUtil.KineticEnergy(Moa.nodes))
-end
-view_profile()
-
-# count = 1
-# print(count)
-# while Moa.MoaUtil.KineticEnergy(Moa.nodes) > 0.00001
-#     Moa.TimeIntegration.adr(Moa.nodes, Moa.bonds, Moa.boundaryConditions, 9999., false)
-#     push!(kehis, Moa.MoaUtil.KineticEnergy(Moa.nodes))
-#     print("\r", count)
-# end
-
+## Relax
+Moa.TimeIntegration.relax(Moa.nodes, Moa.bonds, Moa.boundaryConditions, 1.0e-20)
 
 
 
 ## PYVISTA VISUALIZE
-
-include("Visualize.jl")
-plot(Moa.nodes)
-
-##
-using Plots
-plot(kehis)
-
-
+plot(Moa.nodes, 2.0)
 ## WRITE OUTPUT
-
 Moa.write_output("output.csv", Moa.nodes)
-
-
 ## Increment
 
 for timestep in 1:300
@@ -78,13 +53,10 @@ for timestep in 1:300
         Moa.TimeIntegration.adr(Moa.nodes, Moa.bonds, Moa.boundaryConditions, 9999., false)
     end
 
-    anyBrokenBonds = false
     while !anyBrokenBonds
         Threads.@threads for bond in Moa.bonds
             if !bond.isBroken && Moa.Bonds.should_break(bond)
                 Moa.Bonds.break!(bond)
-                # vvv THIS MAY BE A MISTAKE HERE (ACCESSING AND WRITING TO SHARED VARIABLE)
-                anyBrokenBonds = true
             end
         end
 

@@ -14,9 +14,9 @@ end
 Bond(from::Nodes.Node, to::Nodes.Node) = Bond(from, to, false)
 
 function get_strain(bond::Bond)
-    initial_bond_length = norm(bond.to.position - bond.from.position)
-    deformed_bond_vector = (bond.to.position + bond.to.displacement) - (bond.from.position + bond.from.displacement)
-    deformed_bond_length = norm(deformed_bond_vector)
+    initial_bond_length::Float64 = norm(bond.to.position - bond.from.position)
+    deformed_bond_vector::SVector{3, Float64} = bond.to.position + bond.to.displacement - bond.from.position - bond.from.displacement
+    deformed_bond_length::Float64 = norm(deformed_bond_vector)
     return (deformed_bond_length - initial_bond_length) / initial_bond_length
 end
 
@@ -42,10 +42,12 @@ function apply_force(bond::Bond)
     @atomic bond.from.force += get_force(bond)
 end
 
+"Returns whether or not a bond should break"
 function should_break(bond::Bond)
     return get_strain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
 end
 
+"Breaks the bond"
 function break!(bond::Bond)
     bond.isBroken = true
 end
