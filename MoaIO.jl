@@ -1,5 +1,6 @@
 using TOML
 using CSV
+using .Nodes
 
 function parse_input(path::String)
     input = TOML.parsefile(path)
@@ -26,7 +27,7 @@ function parse_input(path::String)
     end
 
     # Parse grids
-    global nodes = Vector{Nodes.AbstractNode}()
+    global nodes = Vector{Nodes.Node}()
     for input_grid_object in input["Grid"]
         input_grid = CSV.File(input_grid_object["path"], stripwhitespace=true,  comment="#")
         # Required columns in grid file
@@ -62,18 +63,18 @@ function parse_input(path::String)
     cell_list = ProximitySearch.create_cell_list(nodes, horizon)
     println("CREATING BONDS...")
     print("0")
-    parallel_bond_lists = Vector{Vector{AbstractTypes.ABond}}
+    parallel_bond_lists = Vector{Vector{AbstractTypes.ABond}}()
     for i in 1:Threads.nthreads()
-        push!(parallel_bond_lists)
+        push!(parallel_bond_lists, Vector{AbstractTypes.ABond}())
     end
 
-    Threads.@threads for (i, node) in enumerate(nodes)
-        print("\r",i)
+    Threads.@threads for node in nodes
+        # print("\r",i)
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
             b::Bonds.Bond = Bonds.Bond(node, other, false)
-            push!(parallel_bond_lists[Threads.threadid()], b)
             push!(node.family, b)
         end
+        append!(parallel_bond_lists[Threads.threadid()], node.family)
     end
     bonds = vcat(parallel_bond_lists...)
     println("Created ", length(bonds), " bonds")
@@ -100,4 +101,17 @@ function parse_input(path::String)
     println("Created ", length(forceProbes), " force probes")
 
     println("Finished reading input!")
+end
+
+function write_output(path::String, nodes::Vector{Nodes.Node})
+    open(path, "w") do file
+        for node in nodes
+            write(file, string(node.position[1]) * ", " *
+                        string(node.position[2]) * ", " *
+                        string(node.position[3]) * ", " *
+                        string(node.displacement[1]) * ", " *
+                        string(node.displacement[2]) * ", " *
+                        string(node.displacement[3]) * "\n")
+        end
+    end
 end
