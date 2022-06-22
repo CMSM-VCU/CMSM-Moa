@@ -83,7 +83,6 @@ function parse_bc(inputDict, nodes)
     elseif inputDict["type"] == "Staged Loading"
         @assert haskey(inputDict, "increment")
         return StagedLoadingBC(relevant_nodes, zeros(3), inputDict["increment"])
-
     else
         println("Unknown boundary condition type: ", inputDict["type"])
         @assert false
