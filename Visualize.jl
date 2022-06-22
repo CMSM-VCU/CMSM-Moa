@@ -12,6 +12,8 @@ function plot(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, toVisualize:
 
     # Create plotter
     plotter = pv.Plotter()
+    plotter.add_axes(interactive=true)
+    plotter.enable()
 
     # Add point cloud to plotter
     plotter.add_mesh(point_cloud, scalars=toVisualize, cmap="plasma")
