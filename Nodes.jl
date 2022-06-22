@@ -20,6 +20,8 @@ mutable struct Node
     volume::Float64
     material::Materials.AbstractMaterial
 
+    allowFailure::Bool
+
     family::Vector{AbstractTypes.ABond}
 end
 
@@ -34,6 +36,7 @@ Node(x::Float64, y::Float64, z::Float64, m::Materials.AbstractMaterial, grid_spa
     [0,0,0],
     grid_spacing^3,
     m,
+    true,
     [])
 
 Node(pos::MVector{3, Float64}, m::Materials.AbstractMaterial, grid_spacing::Float64) = Node(
@@ -46,6 +49,7 @@ Node(pos::MVector{3, Float64}, m::Materials.AbstractMaterial, grid_spacing::Floa
     [0,0,0],
     grid_spacing^3,
     m,
+    true,
     [])
 
 

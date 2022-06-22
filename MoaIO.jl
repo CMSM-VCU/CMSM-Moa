@@ -89,6 +89,15 @@ function parse_input(path::String)
     end
     println("Created ", length(boundaryConditions), " boundary conditions")
 
+    # NoFail regions
+    if haskey(input, "NoFail")
+        for nofail in input["NoFail"]
+            @assert haskey(nofail, "volume")
+            for node in BoundaryConditions.get_nodes_within_volume(nodes, nofail["volume"])
+                node.allowFailure = false
+            end
+        end
+    end
 
     # Other (force planes, etc.)
     global forceProbes = Vector{ForceProbes.AbstractForceProbe}()

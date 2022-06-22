@@ -44,7 +44,7 @@ end
 
 "Returns whether or not a bond should break"
 function should_break(bond::Bond)
-    return get_strain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
+    return (bond.from.allowFailure && bond.to.allowFailure) && get_strain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
 end
 
 "Breaks the bond"
