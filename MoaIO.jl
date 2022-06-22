@@ -104,14 +104,15 @@ end
 
 function write_output(path::String, nodes::Vector{Nodes.Node})
     open(path, "w") do file
-        write(file, "x,y,z,ux,uy,uz")
+        write(file, "x,y,z,ux,uy,uz,dmg\n")
         for node in nodes
             write(file, string(node.position[1]) * ", " *
                         string(node.position[2]) * ", " *
                         string(node.position[3]) * ", " *
                         string(node.displacement[1]) * ", " *
                         string(node.displacement[2]) * ", " *
-                        string(node.displacement[3]) * "\n")
+                        string(node.displacement[3]) * ", " *
+                        string(Nodes.damage(node)) * "\n")
         end
     end
 end

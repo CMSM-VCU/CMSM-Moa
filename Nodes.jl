@@ -60,7 +60,7 @@ end
 function damage(node::Node)
     numbonds::Int64 = length(node.family)
     numbrokenbonds:: Int64 = 0
-    damage::Float64
+    damage::Float64 = 0
 
     # Count number of broken bonds
     for bond in node.family

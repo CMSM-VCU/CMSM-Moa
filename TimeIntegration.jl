@@ -1,6 +1,6 @@
 module TimeIntegration
 
-using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes, ..MoaUtil
+using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes, ..MoaUtil, ..TimeIntegration
 
 # function dynamic_stable_timestep()
 
@@ -155,6 +155,41 @@ function relax(nodes, bonds, bcs, kethreshold)
         print("\r", count, " : ", kinetic_energy)
     end
     println("\nFinished realxation!")
+end
+
+function stagedloading(nodes, bonds, bcs, kethreshold::Float64)
+
+    # Advance tabs
+    for bc in bcs
+        if bc isa BoundaryConditions.StagedLoadingBC
+            BoundaryConditions.apply_bc(bc)
+        end
+    end
+
+    # Relax system
+    TimeIntegration.relax(nodes, bonds, bcs, kethreshold)
+
+
+    while true
+        # Break bonds
+        anybroken = fill(false, Threads.nthreads())
+        Threads.@threads for bond in bonds
+            if !bond.isBroken && Bonds.should_break(bond)
+                Bonds.break!(bond)
+                anybroken[Threads.threadid()] = true
+            end
+        end
+
+        println("Have any bonds broken: ", any(anybroken))
+
+        # Relax system
+        TimeIntegration.relax(nodes, bonds, bcs, kethreshold)
+
+
+        # repeat until no bonds break
+        any(anybroken) || break
+    end
+
 end
 
 end
