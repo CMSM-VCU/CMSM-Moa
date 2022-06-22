@@ -10,21 +10,14 @@ function KineticEnergy(nodes::Vector{Nodes.Node})
 end
 
 function GetDamageVector(nodes::Vector{Nodes.Node})
-    dmg::Vector{Float64} = []
-    for node in nodes
-        numbonds::Int64 = length(node.family)
-        numbrokenbonds:: Int64 = 0
-        for bond in node.family
-            if bond.isBroken
-                numbrokenbonds += 1
-            end
-        end
-        if numbonds == 0
-            push!(dmg, -1.0)
-        else
-            push!(dmg, numbrokenbonds / numbonds)
-        end
+    # Create array of zeros
+    dmg::Vector{Float64} = fill(0.0, length(nodes))
+
+    # Populate array
+    Threads.@threads for i in 1:length(nodes)
+        dmg[i] = Nodes.damage(nodes[i])
     end
+    
     return dmg
 end
 

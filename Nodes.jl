@@ -57,4 +57,21 @@ function stableMass(node::Node, dt, horizon, gridspacing)
     0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.bond_constant / gridspacing
 end
 
+function damage(node::Node)
+    numbonds::Int64 = length(node.family)
+    numbrokenbonds:: Int64 = 0
+    damage::Float64
+
+    # Count number of broken bonds
+    for bond in node.family
+        if bond.isBroken
+            numbrokenbonds += 1
+        end
+    end
+
+    # If no family members, damage is -1
+    numbonds == 0 ? damage = -1.0 : damage = numbrokenbonds / numbonds
+    return damage
+end
+
 end

@@ -104,6 +104,7 @@ end
 
 function write_output(path::String, nodes::Vector{Nodes.Node})
     open(path, "w") do file
+        write(file, "x,y,z,ux,uy,uz")
         for node in nodes
             write(file, string(node.position[1]) * ", " *
                         string(node.position[2]) * ", " *

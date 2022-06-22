@@ -49,7 +49,7 @@ for lpnum in 1:3
 end
 
 ## PYVISTA VISUALIZE
-plot(Moa.nodes, 1.0)
+# plot(Moa.nodes, 1.0)
 
 ## WRITE OUTPUT
 Moa.write_output("output.csv", Moa.nodes)
