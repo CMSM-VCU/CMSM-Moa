@@ -183,7 +183,7 @@ function stagedloading(nodes, bonds, bcs, kethreshold::Float64)
         println("Have any bonds broken: ", any(anybroken))
 
         # Relax system
-        TimeIntegration.relax(nodes, bonds, bcs, kethreshold)
+        TimeIntegration.relax(nodes, bonds, bcs, kethreshold*10)
 
 
         # repeat until no bonds break
