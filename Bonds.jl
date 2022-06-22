@@ -52,4 +52,10 @@ function break!(bond::Bond)
     bond.isBroken = true
 end
 
+"Removes the bond from nodes families"
+function delete(bond::Bond)
+    deleteat!(bond.from.family, findall(x->x==bond, bond.from.family))
+    deleteat!(bond.to.family, findall(x->x==bond, bond.to.family))
+end
+
 end
