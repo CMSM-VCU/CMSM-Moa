@@ -18,7 +18,7 @@ mutable struct Node
     oldForce::MVector{3, Float64}
 
     volume::Float64
-    material::Materials.AbstractMaterial
+    material::Materials.AMaterial
 
     allowFailure::Bool
 
@@ -26,7 +26,7 @@ mutable struct Node
 end
 
 # Some constructors
-Node(x::Float64, y::Float64, z::Float64, m::Materials.AbstractMaterial, grid_spacing::Float64) = Node(
+Node(x::Float64, y::Float64, z::Float64, m::Materials.AMaterial, grid_spacing::Float64) = Node(
     [x,y,z],
     [0,0,0],
     [0,0,0],
@@ -39,7 +39,7 @@ Node(x::Float64, y::Float64, z::Float64, m::Materials.AbstractMaterial, grid_spa
     true,
     [])
 
-Node(pos::MVector{3, Float64}, m::Materials.AbstractMaterial, grid_spacing::Float64) = Node(
+Node(pos::MVector{3, Float64}, m::Materials.AMaterial, grid_spacing::Float64) = Node(
     pos,
     [0,0,0],
     [0,0,0],
@@ -58,7 +58,11 @@ function mass(node::Node)
 end
 
 function stableMass(node::Node, dt, horizon, gridspacing)
-    0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.bond_constant / gridspacing
+    if node.material isa Materials.LinearElastic
+        return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.bond_constant / gridspacing
+    elseif node.material isa Materials.TanhElastic
+        return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.a * node.material.b / gridspacing
+    end
 end
 
 function damage(node::Node)

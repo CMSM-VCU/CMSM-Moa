@@ -12,14 +12,14 @@ function parse_input(path::String)
     @show global horizon = input["horizon"]
 
     # Parse materials
-    global materials = Vector{Materials.AbstractMaterial}()
+    global materials = Vector{Materials.AMaterial}()
 
     global defaultMaterial = Materials.parse_material(input["MaterialDefault"])
     push!(materials, defaultMaterial)
 
     if haskey(input, "Material")
         for materialInput in input["Material"]
-            mat::Materials.AbstractMaterial = Materials.parse_material(materialInput)
+            mat::Materials.AMaterial = Materials.parse_material(materialInput)
             # Each material should have a unique id
             @assert !(mat.id in [material.id for material in materials])
             push!(materials, mat)
