@@ -1,7 +1,7 @@
 # START
 include("../../Moa.jl")
 include("../../Visualize.jl")
-Moa.parse_input("example_holeplate.toml")
+Moa.parse_input("examples/HolePlate/example_holeplate.toml")
 dt = 9999.
 for node in Moa.nodes
     node.stableMass = Moa.Nodes.stableMass(node, dt, Moa.horizon, Moa.gridspacing)
