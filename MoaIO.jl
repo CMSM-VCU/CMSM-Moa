@@ -62,13 +62,14 @@ function parse_input(path::String)
     global bonds = Vector{AbstractTypes.ABond}()
     cell_list = ProximitySearch.create_cell_list(nodes, horizon)
     println("CREATING BONDS...")
+    # parallel_bond_lists = fill(Vector{Vector{AbstractTypes.ABond}}(), Threads.nthreads())
+
     parallel_bond_lists = Vector{Vector{AbstractTypes.ABond}}()
     for i in 1:Threads.nthreads()
         push!(parallel_bond_lists, Vector{AbstractTypes.ABond}())
     end
 
     Threads.@threads for node in nodes
-        # print("\r",i)
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
             b::Bonds.Bond = Bonds.Bond(node, other, false)
             push!(node.family, b)
@@ -78,18 +79,16 @@ function parse_input(path::String)
     bonds = vcat(parallel_bond_lists...)
     println("Created ", length(bonds), " bonds")
 
-
     # Parse BCs
     global boundaryConditions = Vector{BoundaryConditions.AbstractBoundaryCondition}()
     if haskey(input, "BC")
         for bc in input["BC"]
             push!(boundaryConditions, BoundaryConditions.parse_bc(bc, nodes))
-            # println(typeof(last(boundaryConditions)))
         end
     end
     println("Created ", length(boundaryConditions), " boundary conditions")
 
-    # NoFail regions
+    # NoFail regions TEMPORARY FIX!!!
     if haskey(input, "NoFail")
         for nofail in input["NoFail"]
             @assert haskey(nofail, "volume")
@@ -99,7 +98,7 @@ function parse_input(path::String)
         end
     end
 
-    # Other (force planes, etc.)
+    # Force probes
     global forceProbes = Vector{ForceProbes.AbstractForceProbe}()
     if haskey(input, "ForceProbe")
         for forceProbe in input["ForceProbe"]

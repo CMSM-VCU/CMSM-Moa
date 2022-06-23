@@ -1,7 +1,7 @@
 # START
-include("Moa.jl")
-include("Visualize.jl")
-Moa.parse_input("example_pants.toml")
+include("../../Moa.jl")
+include("../../Visualize.jl")
+Moa.parse_input("examples/Pants/example_pants.toml")
 
 # need to put this into a setup function or have it at the end of parse_input
 for node in Moa.nodes
@@ -33,14 +33,14 @@ end
 
 ## LOOP
 # Moa.TimeIntegration.relax(Moa.nodes,Moa.bonds,Moa.boundaryConditions, 1.0e-15)
-for i in 1:3
+for i in 1:10
     println("Staged loading step ", i)
     Moa.TimeIntegration.stagedloading(Moa.nodes,Moa.bonds,Moa.boundaryConditions, 1.0e-15)
 end
 
 ## PYVISTA VISUALIZE
 plotDisplacement(Moa.nodes, 1.0, 2)
-plotDamage(Moa.nodes, 1.0)
+plotDamage(Moa.nodes, 2.0)
 
 plotDisplacement(Moa.nodes, 10.0, 1)
 plotDamage(Moa.nodes, 1.0)

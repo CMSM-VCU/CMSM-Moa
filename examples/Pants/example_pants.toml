@@ -3,7 +3,7 @@ horizon = 3.015
 
 
 [[Grid]]
-    path = "pants.grid"
+    path = "examples/Pants/pants.grid"
 
 [MaterialDefault]
     type = "LinearElastic"

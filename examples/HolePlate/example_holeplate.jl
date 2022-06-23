@@ -1,6 +1,6 @@
 # START
-include("Moa.jl")
-include("Visualize.jl")
+include("../../Moa.jl")
+include("../../Visualize.jl")
 Moa.parse_input("example_holeplate.toml")
 dt = 9999.
 for node in Moa.nodes

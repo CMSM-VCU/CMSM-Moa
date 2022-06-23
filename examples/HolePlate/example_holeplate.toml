@@ -3,7 +3,7 @@ horizon = 3.015
 
 
 [[Grid]]
-    path = "holeplate.grid"
+    path = "examples/HolePlate/holeplate.grid"
 
 [MaterialDefault]
     type = "LinearElastic"

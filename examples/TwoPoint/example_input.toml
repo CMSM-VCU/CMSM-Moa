@@ -2,7 +2,7 @@ gridspacing = 2.0
 horizon = 6.03
 
 [[Grid]]
-    path = "twopoints.grid"
+    path = "examples/TwoPoint/twopoints.grid"
 
 [MaterialDefault]
     type = "LinearElastic"

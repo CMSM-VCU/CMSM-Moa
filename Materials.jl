@@ -15,7 +15,20 @@ Base.copy(material::LinearElastic) = LinearElastic(
         material.critical_strain,
         material.bond_constant)
 
+mutable struct TanhElastic <: AbstractMaterial
+    id::Int64
 
+    # Not very relevant because it is 
+    density::Float64
+
+    # This is taken from MD data
+    critical_strain::Float64
+
+    # These two are parameters that were fit to the md PolyData
+    # stress = a * tanh(b * strain)
+    fit_a::Float64
+    fit_b::Float64
+end
 
 mutable struct CustomMaterial <: AbstractMaterial
     id::Int64
@@ -30,6 +43,8 @@ function parse_material(inputDict)
 
     if inputDict["type"] == "LinearElastic"
         return Materials.LinearElastic(inputDict["id"], inputDict["density"], inputDict["critical_strain"], inputDict["bond_constant"])
+    elseif inputDict["type"] == "TanhElastic"
+        return Materials.TanhElastic(inputDict["id"], inputDict["density"], inputDict["critical_strain"], inputDict["a"], inputDict["b"])
     elseif inputDict["type"] == "Custom"
         return Materials.CustomMaterial(inputDict["id"], inputDict["density"])
     else

@@ -49,6 +49,7 @@ end
 
 "Breaks the bond"
 function break!(bond::Bond)
+    bond.isBroken && println("WARNING! BREAKING BOND THAT IS ALREADY BROKEN!")
     bond.isBroken = true
 end
 
