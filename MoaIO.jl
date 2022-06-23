@@ -8,8 +8,8 @@ function parse_input(path::String)
     println("Parsing input...")
 
     # Parse global scalars
-    @show global gridspacing = input["gridspacing"]
-    @show global horizon = input["horizon"]
+    @show global gridspacing = Float64(input["gridspacing"])
+    @show global horizon = Float64(input["horizon"])
 
     # Parse materials
     global materials = Vector{Materials.AMaterial}()
