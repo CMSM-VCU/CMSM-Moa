@@ -62,16 +62,11 @@ function parse_input(path::String)
     global bonds = Vector{AbstractTypes.ABond}()
     cell_list = ProximitySearch.create_cell_list(nodes, horizon)
     println("CREATING BONDS...")
-    # parallel_bond_lists = fill(Vector{Vector{AbstractTypes.ABond}}(), Threads.nthreads())
-
-    parallel_bond_lists = Vector{Vector{AbstractTypes.ABond}}()
-    for i in 1:Threads.nthreads()
-        push!(parallel_bond_lists, Vector{AbstractTypes.ABond}())
-    end
+    parallel_bond_lists = fill(Vector{AbstractTypes.ABond}(), Threads.nthreads())
 
     Threads.@threads for node in nodes
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
-            b::Bonds.Bond = Bonds.Bond(node, other, false)
+            b::Bonds.Bond = Bonds.Bond(node, other)
             push!(node.family, b)
         end
         append!(parallel_bond_lists[Threads.threadid()], node.family)
