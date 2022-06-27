@@ -2,7 +2,7 @@ using PyCall
 using .Moa
 using CSV
 
-function plot(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, toVisualize::Vector{Float64})
+function MoaPlot(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, toVisualize::Vector{Float64})
     # Import pyvista
     pv = PyCall.pyimport_conda("pyvista", "pyvista", "conda-forge")
     PyCall.pyimport_conda("matplotlib.pyplot", "matplotlib", "conda-forge")
@@ -23,11 +23,27 @@ function plot(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, toVisualize:
 end
 
 function plotDamage(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
-    plot(nodes, exaggeration, Moa.MoaUtil.GetDamageVector(Moa.nodes))
+    MoaPlot(nodes, exaggeration, Moa.MoaUtil.GetDamageVector(Moa.nodes))
+end
+
+function plotInterfaceDamage(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
+    MoaPlot(nodes, exaggeration, [Float64(Moa.Nodes.interfaceDamage(node)) for node in nodes])
+end
+
+function plotMaterialDamage(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
+    MoaPlot(nodes, exaggeration, [Float64(Moa.Nodes.materialDamage(node)) for node in nodes])
 end
 
 function plotDisplacement(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, axis::Int64)
-    plot(nodes, exaggeration, [node.displacement[axis] for node in nodes])
+    MoaPlot(nodes, exaggeration, [node.displacement[axis] for node in nodes])
+end
+
+function plotVelocity(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, axis::Int64)
+    MoaPlot(nodes, exaggeration, [node.velocity[axis] for node in nodes])
+end
+
+function plotMaterialID(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
+    MoaPlot(nodes, exaggeration, [Float64(node.material.id) for node in nodes])
 end
 
 function plotOutput(filepath::String, exaggeration::Float64)

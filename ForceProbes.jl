@@ -1,31 +1,30 @@
 module ForceProbes
 
-using ..AbstractTypes: ABond
+# using ..AbstractTypes: ABond
 using ..Bonds
-using ..Nodes
-using LinearAlgebra
+using LinearAlgebra: dot
 
 abstract type AbstractForceProbe end
 
 
 struct ForceProbePlane <: AbstractForceProbe
-    bondsPositive::Vector{ABond}
-    bondsNegative::Vector{ABond}
+    bondsPositive::Vector{Bonds.Bond}
+    bondsNegative::Vector{Bonds.Bond}
     pointOnPlane::Vector{Float64}
     normal::Vector{Float64}
 end
 
 function signed_distance_from_plane(point::Vector{Float64}, pointOnPlane::Vector{Float64}, normal::Vector{Float64})
-    return LinearAlgebra.dot(point, normal) - LinearAlgebra.dot(pointOnPlane, normal)
+    return dot(point, normal) - dot(pointOnPlane, normal)
 end
 
 function measure_force(fp::ForceProbePlane)
     force = 0
     for bond in fp.bondsPositive
-        force += LinearAlgebra.dot(Bonds.get_force(bond), fp.normal)
+        force += dot(Bonds.get_force(bond), fp.normal)
     end
     for bond in fp.bondsNegative
-        force -= LinearAlgebra.dot(Bonds.get_force(bond), fp.normal)
+        force -= dot(Bonds.get_force(bond), fp.normal)
     end
     return force * 0.5
 end
@@ -34,8 +33,8 @@ function parse_force_probe_plane(inputDict, bonds)
     pointOnPlane::Vector{Float64} = inputDict["pointOnPlane"]
     normal::Vector{Float64} = inputDict["normal"]
 
-    bondsPositive = Vector{ABond}()
-    bondsNegative = Vector{ABond}()
+    bondsPositive = Vector{Bonds.Bond}()
+    bondsNegative = Vector{Bonds.Bond}()
 
     for bond in bonds
         fromDist = signed_distance_from_plane(convert(Vector{Float64}, bond.from.position), pointOnPlane, normal)

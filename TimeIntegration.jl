@@ -1,6 +1,7 @@
 module TimeIntegration
 
 using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes, ..MoaUtil, ..TimeIntegration
+using Plots: plot!
 
 # function dynamic_stable_timestep()
 
@@ -141,10 +142,12 @@ function adr(nodes::Vector{Nodes.Node},
 end
 
 function relax(nodes, bonds, bcs, kethreshold)
-    println("Relaxing system...")
+    # println("Relaxing system...")
 
     adr(nodes, bonds,bcs, 9999., true)
-    
+    for i in 1:3
+        adr(nodes,bonds,bcs,9999.,false)
+    end    
     kinetic_energy = MoaUtil.KineticEnergy(nodes)
     count = 1
 
@@ -154,7 +157,7 @@ function relax(nodes, bonds, bcs, kethreshold)
         count += 1
         print("\r", count, " : ", kinetic_energy)
     end
-    println("\nFinished realxation!")
+    # println("\nFinished realxation!")
 end
 
 function stagedloading(nodes, bonds, bcs, kethreshold::Float64)
@@ -180,7 +183,7 @@ function stagedloading(nodes, bonds, bcs, kethreshold::Float64)
             end
         end
 
-        println("Have any bonds broken: ", any(anybroken))
+        # println("Have any bonds broken: ", any(anybroken))
 
         # Relax system
         TimeIntegration.relax(nodes, bonds, bcs, kethreshold*10)
