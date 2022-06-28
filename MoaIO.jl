@@ -124,6 +124,7 @@ function write_output(path::String, nodes::Vector{Nodes.Node})
                         string(node.position[3]) * ", " *
                         string(node.displacement[1]) * ", " *
                         string(node.displacement[2]) * ", " *
+                        string(node.displacement[3]) * ", " *
                         string(Nodes.damage(node)) * ", " *
                         string(Nodes.interfaceDamage(node)) * ", " *
                         string(Nodes.materialDamage(node)) *

@@ -1,7 +1,6 @@
 module TimeIntegration
 
 using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes, ..MoaUtil, ..TimeIntegration
-using Plots: plot!
 
 # function dynamic_stable_timestep()
 
