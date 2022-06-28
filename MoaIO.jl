@@ -1,6 +1,7 @@
 using TOML
 using CSV
 using .Nodes
+using PyCall
 
 function parse_input(path::String)
     input = TOML.parsefile(path)
@@ -115,20 +116,24 @@ function parse_input(path::String)
     println("Finished reading input!")
 end
 
-function write_output(path::String, nodes::Vector{Nodes.Node})
-    open(path, "w") do file
-        write(file, "x,y,z,ux,uy,uz,dmg,dmgi,dmgm\n")
-        for node in nodes
-            write(file, string(node.position[1]) * ", " *
-                        string(node.position[2]) * ", " *
-                        string(node.position[3]) * ", " *
-                        string(node.displacement[1]) * ", " *
-                        string(node.displacement[2]) * ", " *
-                        string(node.displacement[3]) * ", " *
-                        string(Nodes.damage(node)) * ", " *
-                        string(Nodes.interfaceDamage(node)) * ", " *
-                        string(Nodes.materialDamage(node)) *
-                        "\n")
-        end
-    end
+function write_output(path::String, nodes::Vector{Nodes.Node}, timestep::Int64)
+    pd = PyCall.pyimport_conda("pandas", "pandas")
+    df = pd.DataFrame(
+            data = [(
+                node.position.x,
+                node.position.y,
+                node.position.z,
+                node.displacement.x,
+                node.displacement.y,
+                node.displacement.z,
+                Nodes.damage(node),
+                Nodes.interfaceDamage(node),
+                Nodes.materialDamage(node),
+                node.material.id
+                ) for node in nodes],
+            columns = ["x", "y", "z", "ux", "uy", "uz", "dmg", "dmgi", "dmgm", "mat"]
+    )
+
+    df.to_hdf(path, "t"*lpad(timestep, 7, "0"), mode="a")
+
 end
