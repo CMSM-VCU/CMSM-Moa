@@ -10,7 +10,7 @@ Pkg.add("StaticArrays")
 
 Pkg.add("PyCall")
 using PyCall
-PyCall.pyimport_conda("tables", "tables")
+PyCall.pyimport_conda("tables", "pytables")
 PyCall.pyimport_conda("pandas", "pandas")
 
 
