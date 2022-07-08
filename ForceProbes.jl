@@ -1,13 +1,10 @@
 module ForceProbes
 
-# using ..AbstractTypes: ABond
 using ..Bonds
 using LinearAlgebra: dot
+using ..AbstractTypes: AForceProbe
 
-abstract type AbstractForceProbe end
-
-
-struct ForceProbePlane <: AbstractForceProbe
+struct ForceProbePlane <: AForceProbe
     bondsPositive::Vector{Bonds.Bond}
     bondsNegative::Vector{Bonds.Bond}
     pointOnPlane::Vector{Float64}
