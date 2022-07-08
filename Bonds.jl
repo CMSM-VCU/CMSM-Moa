@@ -39,15 +39,17 @@ function get_force(bond::Bond)
 end
 
 function get_force(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
-    if bond.isBroken
-        return zeros(3)
-    end
+
 
     # Duplicated code here from get_strain because it uses intermediate calculations
     initial_bond_length::Float64 = norm(bond.to.position - bond.from.position)
     deformed_bond_vector::SVector{3, Float64} = bond.to.position + bond.to.displacement - bond.from.position - bond.from.displacement
     deformed_bond_length::Float64 = norm(deformed_bond_vector)
     strain::Float64 = (deformed_bond_length - initial_bond_length) / initial_bond_length
+
+    if strain > 0.0 && bond.isBroken
+        return zeros(3)
+    end
 
     direction::SVector{3,Float64} = deformed_bond_vector ./ deformed_bond_length
 
