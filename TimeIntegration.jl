@@ -36,7 +36,7 @@ function dynamic_integration(nodes, bonds, bcs, dt)
 
     # Break bonds
     Threads.@threads for bond in bonds
-        if Bonds.should_break(bond)
+        if !bond.isBroken && Bonds.should_break(bond)
             Bonds.break!(bond)
         end
     end
