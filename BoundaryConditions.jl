@@ -3,10 +3,10 @@ using LinearAlgebra
 using ..Materials
 using ..Nodes
 using ..Bonds
+using ..AbstractTypes: ABoundaryCondition
 
-abstract type AbstractBoundaryCondition end
 
-struct DisplacementBC <: AbstractBoundaryCondition
+struct DisplacementBC <: ABoundaryCondition
     nodes::Vector{Nodes.Node}
     displacement::Vector{Float64}
 end
@@ -21,7 +21,7 @@ function apply_bc(bc::DisplacementBC)
 end
 
 
-struct VelocityBC <: AbstractBoundaryCondition
+struct VelocityBC <: ABoundaryCondition
     nodes::Vector{Nodes.Node}
     velocity::Vector{Float64}
 end
@@ -32,7 +32,7 @@ function apply_bc(bc::VelocityBC)
     end
 end
 
-mutable struct StagedLoadingBC <: AbstractBoundaryCondition
+mutable struct StagedLoadingBC <: ABoundaryCondition
     nodes::Vector{Nodes.Node}
     currentDisplacement::Vector{Float64}
     increment::Vector{Float64}
