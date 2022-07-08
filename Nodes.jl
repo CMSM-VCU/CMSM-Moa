@@ -3,6 +3,7 @@ module Nodes
 using StaticArrays
 using ..Materials
 using ..AbstractTypes
+using LinearAlgebra: norm
 # abstract type AbstractNode end
 
 # mutable struct Node <: AbstractNode
@@ -113,6 +114,13 @@ function interfaceDamage(node::Node)
     damage::Float64 = 0
     numbonds == 0 ? damage = 0 : damage = numbrokenbonds / numbonds
     return damage
+end
+
+
+function distance(a::Node, b::Node)
+    return norm((a.position[1] - b.position[1])^2 +
+                (a.position[2] - b.position[2])^2 +
+                (a.position[3] - b.position[3])^2)
 end
 
 end

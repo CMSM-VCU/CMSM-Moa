@@ -7,13 +7,15 @@ mutable struct LinearElastic <: AMaterial
     density::Float64
     critical_strain::Float64
     bond_constant::Float64
+    emod::Float64
 end
 
 Base.copy(material::LinearElastic) = LinearElastic(
         material.id,
         material.density,
         material.critical_strain,
-        material.bond_constant)
+        material.bond_constant,
+        material.emod)
 
 mutable struct TanhElastic <: AMaterial
     id::Int64
@@ -31,6 +33,7 @@ mutable struct TanhElastic <: AMaterial
     # Initial stiffness is a * b
     a::Float64
     b::Float64
+    emod::Float64
 end
 
 Base.copy(material::TanhElastic) = TanhElastic(material.id,
@@ -38,12 +41,8 @@ Base.copy(material::TanhElastic) = TanhElastic(material.id,
     material.interface_stiffness_coeff,
     material.critical_strain,
     material.a,
-    material.b)
-
-mutable struct CustomMaterial <: AMaterial
-    id::Int64
-    density::Float64
-end
+    material.b,
+    material.emod)
 
 function parse_material(inputDict)
     # A material needs at least these 3 properties
@@ -52,15 +51,29 @@ function parse_material(inputDict)
     @assert haskey(inputDict, "id")
 
     if inputDict["type"] == "LinearElastic"
-        return Materials.LinearElastic(inputDict["id"], inputDict["density"], inputDict["critical_strain"], inputDict["bond_constant"])
+        return Materials.LinearElastic(
+                                        inputDict["id"],
+                                        inputDict["density"],
+                                        inputDict["critical_strain"],
+                                        inputDict["bond_constant"],
+                                        Float64(inputDict["bond_constant"]*6)
+                                    )
+
     elseif inputDict["type"] == "TanhElastic"
         @assert haskey(inputDict, "interface_stiffness_coeff")
-        return Materials.TanhElastic(inputDict["id"], inputDict["density"], inputDict["interface_stiffness_coeff"], inputDict["critical_strain"], inputDict["a"], inputDict["b"])
-    elseif inputDict["type"] == "Custom"
-        return Materials.CustomMaterial(inputDict["id"], inputDict["density"])
+        return Materials.TanhElastic(
+                                        inputDict["id"],
+                                        inputDict["density"],
+                                        inputDict["interface_stiffness_coeff"],
+                                        inputDict["critical_strain"],
+                                        inputDict["a"],
+                                        inputDict["b"],
+                                        Float64(inputDict["a"]) * Float64(inputDict["b"])
+                                    )
+
     else
         # Material type not known
-        println("#### Unknown type from material: ", inputDict["id"])
+        println("Unknown type from material: ", inputDict["id"])
         throw(Exception)
     end
 end

@@ -1,6 +1,7 @@
 module TimeIntegration
 
-using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes, ..MoaUtil, ..TimeIntegration
+using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes, ..MoaUtil, ..TimeIntegration, ..ProximitySearch
+using LinearAlgebra: norm
 
 # function dynamic_stable_timestep()
 
@@ -43,6 +44,31 @@ function dynamic_integration(nodes, bonds, bcs, dt)
     # Apply bond force to nodes
     Threads.@threads for bond in bonds
         Bonds.apply_force(bond)
+    end
+
+    # Contact force
+    gridspacing = 3.015
+    cell_list = ProximitySearch.create_cell_list(nodes, gridspacing)
+    Threads.@threads for node in nodes
+        gridspacing = 3.015
+        for other in ProximitySearch.sample_cell_list(cell_list, node, gridspacing)
+            # Dont add force if the node is a familiy member
+            isInFamily::Bool = false
+            for bond in node.family
+                if bond.to == other
+                    isInFamily = true
+                    break
+                end
+            end
+            if isInFamily
+                continue
+            end
+            
+            distance::Float64 = Nodes.distance(node, other)
+            direction::Vector{Float64} = (other.position - node.position) / norm(other.position - node.position)
+            emod::Float64 = (node.material.emod + other.material.emod) * 0.0005
+            @atomic node.force += emod * ((gridspacing - distance) / gridspacing) * direction * node.volume * other.volume
+        end
     end
 
     Threads.@threads for node in nodes
