@@ -2,10 +2,21 @@ import Pkg
 Pkg.add("CSV")
 Pkg.add("StaticArrays")
 
+
+# If on linux, you need to run:
+    # ENV["PYTHON"] = ""
+    # Pkg.build("PyCall")
+# once so that it will be able to automatically install packages
+
 Pkg.add("PyCall")
-PyCall.pyimport_conda("pytables", "pytables")
-PyCall.pyimport_conda("pyvista", "pyvista", "conda-forge")
-PyCall.pyimport_conda("matplotlib.pyplot", "matplotlib", "conda-forge")
+using PyCall
+PyCall.pyimport_conda("tables", "tables")
+PyCall.pyimport_conda("pandas", "pandas")
+
 
 # Dont add if using headless:
-# Pkg.add("Plots")
+if Sys.iswindows()
+    PyCall.pyimport_conda("pyvista", "pyvista", "conda-forge")
+    PyCall.pyimport_conda("matplotlib.pyplot", "matplotlib", "conda-forge")
+    Pkg.add("Plots")
+end
