@@ -14,6 +14,8 @@ end
 
 Bond(from::Nodes.Node{<:AMaterial}, to::Nodes.Node{<:AMaterial}) = Bond(from, to, false)
 
+"The strain of a bond as the change in length of the bond relative to its initial 
+length"
 function get_strain(bond::Bond)
     initial_bond_length::Float64 = norm(bond.to.position - bond.from.position)
     deformed_bond_vector::SVector{3, Float64} = bond.to.position + bond.to.displacement - bond.from.position - bond.from.displacement
@@ -21,7 +23,8 @@ function get_strain(bond::Bond)
     return (deformed_bond_length - initial_bond_length) / initial_bond_length
 end
 
-"Returns the force of the bond with the minimum material properties"
+"The force of the bond with the minimum material properties between two LinearElastic 
+Nodes"
 function get_force(bond::Bond)
     if bond.isBroken
         return zeros(3)
@@ -38,9 +41,9 @@ function get_force(bond::Bond)
     return  direction * (min(bond.from.material.bond_constant, bond.to.material.bond_constant) * strain * bond.to.volume * bond.from.volume)
 end
 
+"The force enacted by the bond's to node onto the bond's from node for a bond between 
+two TanhElastic Nodes"
 function get_force(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
-
-
     # Duplicated code here from get_strain because it uses intermediate calculations
     initial_bond_length::Float64 = norm(bond.to.position - bond.from.position)
     deformed_bond_vector::SVector{3, Float64} = bond.to.position + bond.to.displacement - bond.from.position - bond.from.displacement
@@ -73,7 +76,7 @@ end
 "Breaks the bond"
 function break!(bond::Bond)
     bond.isBroken && println("WARNING! BREAKING BOND THAT IS ALREADY BROKEN!")
-    println("SNAPPPPP: ", bond.from.position[1], ", ", bond.to.position[1])
+    # println("SNAPPPPP: ", bond.from.position[1], ", ", bond.to.position[1])
     bond.isBroken = true
 end
 

@@ -10,13 +10,6 @@ mutable struct LinearElastic <: AMaterial
     emod::Float64
 end
 
-Base.copy(material::LinearElastic) = LinearElastic(
-        material.id,
-        material.density,
-        material.critical_strain,
-        material.bond_constant,
-        material.emod)
-
 mutable struct TanhElastic <: AMaterial
     id::Int64
 
@@ -36,6 +29,14 @@ mutable struct TanhElastic <: AMaterial
     emod::Float64
 end
 
+Base.copy(material::LinearElastic) = LinearElastic(
+        material.id,
+        material.density,
+        material.critical_strain,
+        material.bond_constant,
+        material.emod)
+
+
 Base.copy(material::TanhElastic) = TanhElastic(material.id,
     material.density,
     material.interface_stiffness_coeff,
@@ -44,6 +45,7 @@ Base.copy(material::TanhElastic) = TanhElastic(material.id,
     material.b,
     material.emod)
 
+"Creates material from input dictionary"
 function parse_material(inputDict)
     # A material needs at least these 3 properties
     @assert haskey(inputDict, "type")
@@ -77,6 +79,5 @@ function parse_material(inputDict)
         throw(Exception)
     end
 end
-
 
 end
