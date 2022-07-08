@@ -1,6 +1,7 @@
 using PyCall
 using .Moa
 using CSV
+using LinearAlgebra: norm
 
 function MoaPlot(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, toVisualize::Vector{Float64})
     # Import pyvista
@@ -38,12 +39,20 @@ function plotDisplacement(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, 
     MoaPlot(nodes, exaggeration, [node.displacement[axis] for node in nodes])
 end
 
+function plotDisplacementMagnitude(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
+    MoaPlot(nodes, exaggeration, [norm(node.displacement) for node in nodes])
+end
+
 function plotVelocity(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, axis::Int64)
     MoaPlot(nodes, exaggeration, [node.velocity[axis] for node in nodes])
 end
 
 function plotMaterialID(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
     MoaPlot(nodes, exaggeration, [Float64(node.material.id) for node in nodes])
+end
+
+function plotVelocityMagnitude(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
+    MoaPlot(nodes, exaggeration, [norm(node.velocity) for node in nodes])
 end
 
 function plotOutput(filepath::String, exaggeration::Float64)
