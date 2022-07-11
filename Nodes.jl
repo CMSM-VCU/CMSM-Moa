@@ -4,9 +4,7 @@ using StaticArrays
 using ..Materials
 using ..AbstractTypes
 using LinearAlgebra: norm
-# abstract type AbstractNode end
 
-# mutable struct Node <: AbstractNode
 mutable struct Node{M}
     position::MVector{3, Float64}
     displacement::MVector{3, Float64}
