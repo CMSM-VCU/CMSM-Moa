@@ -87,7 +87,7 @@ function parse_input(path::String)
     # Create bonds
     println("Creating bonds...")
     bonds = Vector{AbstractTypes.ABond}()
-    cell_list = ProximitySearch.create_cell_list(nodes, horizon)
+    cell_list = ProximitySearch.create_cell_list_reference_configuration(nodes, horizon)
     Threads.@threads for node in nodes
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
             b::Bonds.Bond = Bonds.Bond(node, other)
