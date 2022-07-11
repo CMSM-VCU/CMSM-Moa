@@ -4,23 +4,23 @@ using .Nodes
 using PyCall
 
 function parse_input(path::String)
-    input = TOML.parsefile(path)
-    
     println("Parsing input...")
+    input = TOML.parsefile(path)
 
     # Parse global scalars
-    @show global gridspacing = Float64(input["gridspacing"])
-    @show global horizon = Float64(input["horizon"])
+    gridspacing = Float64(input["gridspacing"])
+    horizon = Float64(input["horizon"])
 
     # Parse materials
-    global materials = Vector{Materials.AMaterial}()
-
-    global defaultMaterial = Materials.parse_material(input["MaterialDefault"])
+    materials = Vector{Materials.AMaterial}()
+    defaultMaterial = Materials.parse_material(input["MaterialDefault"])
     push!(materials, defaultMaterial)
 
     if haskey(input, "Material")
         for materialInput in input["Material"]
+            
             mat::Materials.AMaterial = Materials.parse_material(materialInput)
+            
             # Each material should have a unique id
             @assert !(mat.id in [material.id for material in materials])
             push!(materials, mat)
@@ -28,10 +28,20 @@ function parse_input(path::String)
     end
 
     # Stable timestep
-    # global dt = gridspacing / sqrt(maxbulkmod / mindensity)
+    dt = 0
+    if haskey(input, "dt")
+        dt = Float64(input["dt"])
+    else
+        dt = gridspacing / sqrt(maximum([mat.emod for mat in materials]) / minimum([mat.density for mat in materials]))
+    end
+
+    if dt <= 0
+        throw(Exception)
+    end
+
 
     # Parse grids
-    global nodes = Vector{Nodes.Node}()
+    nodes = Vector{Nodes.Node}()
     for input_grid_object in input["Grid"]
         input_grid = CSV.File(input_grid_object["path"], stripwhitespace=true,  comment="#")
 
@@ -69,14 +79,14 @@ function parse_input(path::String)
         end
     end
 
-    # Stable mass for adr (dt needs to be large)
+    # Stable mass for adr
     Threads.@threads for node in nodes
         node.stableMass = Nodes.stableMass(node, 9999., horizon, gridspacing)
     end
 
     # Create bonds
-    println("CREATING BONDS...")
-    global bonds = Vector{AbstractTypes.ABond}()
+    println("Creating bonds...")
+    bonds = Vector{AbstractTypes.ABond}()
     cell_list = ProximitySearch.create_cell_list(nodes, horizon)
     Threads.@threads for node in nodes
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
@@ -89,7 +99,7 @@ function parse_input(path::String)
 
 
     # Parse BCs
-    global boundaryConditions = Vector{BoundaryConditions.AbstractBoundaryCondition}()
+    boundaryConditions = Vector{AbstractTypes.ABoundaryCondition}()
     if haskey(input, "BC")
         for bc in input["BC"]
             push!(boundaryConditions, BoundaryConditions.parse_bc(bc, nodes))
@@ -108,7 +118,7 @@ function parse_input(path::String)
     end
 
     # Force probes
-    global forceProbes = Vector{ForceProbes.AbstractForceProbe}()
+    forceProbes = Vector{AbstractTypes.AForceProbe}()
     if haskey(input, "ForceProbe")
         for forceProbe in input["ForceProbe"]
             push!(forceProbes, ForceProbes.parse_force_probe_plane(forceProbe, bonds))
@@ -116,10 +126,11 @@ function parse_input(path::String)
     end
     println("Created ", length(forceProbes), " force probes")
 
-    println("Finished reading input!")
+    println("Finished parsing input!")
+    return Moa.state(gridspacing, horizon, dt, nodes, bonds, materials, boundaryConditions, forceProbes)
 end
 
-function write_output(path::String, nodes::Vector{Nodes.Node}, timestep::Int64)
+function write_output(path::String, state, timestep::Int64)
     pd = PyCall.pyimport_conda("pandas", "pandas")
     df = pd.DataFrame(
             data = [(
@@ -129,12 +140,15 @@ function write_output(path::String, nodes::Vector{Nodes.Node}, timestep::Int64)
                 node.displacement.x,
                 node.displacement.y,
                 node.displacement.z,
+                node.velocity.x,
+                node.velocity.y,
+                node.velocity.z,
+                node.material.id,
                 Nodes.damage(node),
                 Nodes.interfaceDamage(node),
-                Nodes.materialDamage(node),
-                node.material.id
-                ) for node in nodes],
-            columns = ["x", "y", "z", "ux", "uy", "uz", "dmg", "dmgi", "dmgm", "mat"]
+                Nodes.materialDamage(node)
+                ) for node in state.nodes],
+            columns = ["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "dmg", "dmgi", "dmgm", "mat"]
     )
 
     df.to_hdf(path, "t"*lpad(timestep, 7, "0"), mode="a")

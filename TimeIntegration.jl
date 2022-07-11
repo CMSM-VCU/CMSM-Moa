@@ -1,57 +1,61 @@
 module TimeIntegration
 
-using ..Materials, ..Nodes, ..Bonds, ..BoundaryConditions, ..AbstractTypes, ..MoaUtil, ..TimeIntegration, ..ProximitySearch
+using ..Materials
+using ..Nodes
+using ..Bonds
+using ..BoundaryConditions
+using ..AbstractTypes
+using ..MoaUtil
+using ..TimeIntegration
+using ..ProximitySearch
+
 using LinearAlgebra: norm
 
-# function dynamic_stable_timestep()
+function dynamic_integration(state)
 
-function dynamic_integration(nodes, bonds, bcs, dt)
-
-    Threads.@threads for node in nodes
+    Threads.@threads for node in state.nodes
         # Average velocity for the time step assuming constant acceleration
-        node.velocity = node.velocity + (dt*0.5)*(node.force/(node.volume*node.material.density))
+        node.velocity = node.velocity + (state.dt*0.5)*(node.force/(node.volume*node.material.density))
     end
     
     # Velocity BCs
-    for bc in bcs
-        if bc isa BoundaryConditions.VelocityBoundaryCondition
+    for bc in state.boundaryConditions
+        if bc isa BoundaryConditions.VelocityBC
             BoundaryConditions.apply_bc(bc)
         end
     end
     
-    Threads.@threads for node in nodes
+    Threads.@threads for node in state.nodes
         # Update displacement with average velocity
-        node.displacement += node.velocity * dt
+        node.displacement += node.velocity * state.dt
 
         # Zero out force
         @atomic node.force = zeros(3)
     end
 
     # Displacement BCs
-    for bc in bcs
-        if bc isa BoundaryConditions.DisplacementBoundaryCondition
+    for bc in state.boundaryConditions
+        if bc isa BoundaryConditions.DisplacementBC
             BoundaryConditions.apply_bc(bc)
         end
     end
 
     # Break bonds
-    Threads.@threads for bond in bonds
+    Threads.@threads for bond in state.bonds
         if !bond.isBroken && Bonds.should_break(bond)
             Bonds.break!(bond)
         end
     end
 
     # Apply bond force to nodes
-    Threads.@threads for bond in bonds
+    Threads.@threads for bond in state.bonds
         Bonds.apply_force(bond)
     end
 
     # Contact force
-    gridspacing = 3.015
-    cell_list = ProximitySearch.create_cell_list(nodes, gridspacing)
-    Threads.@threads for node in nodes
-        gridspacing = 3.015
-        for other in ProximitySearch.sample_cell_list(cell_list, node, gridspacing)
+    cell_list = ProximitySearch.create_cell_list(state.nodes, state.horizon)
+    Threads.@threads for node in state.nodes
+        for other in ProximitySearch.sample_cell_list(cell_list, node, state.horizon)
             # Dont add force if the node is a familiy member
             isInFamily::Bool = false
             for bond in node.family
@@ -71,26 +75,71 @@ function dynamic_integration(nodes, bonds, bcs, dt)
         end
     end
 
-    Threads.@threads for node in nodes
+    Threads.@threads for node in state.nodes
         # Calculate final velocity
-        node.velocity = node.velocity + dt*0.5 * (node.force / (node.volume * node.material.density))
+        node.velocity = node.velocity + state.dt*0.5 * (node.force / (node.volume * node.material.density))
     end
 
 end
 
-function adr(nodes::Vector{Nodes.Node},
-                bonds::Vector{AbstractTypes.ABond},
-                bcs::Vector{BoundaryConditions.AbstractBoundaryCondition},
-                dt::Float64,
-                stale::Bool)
-    
+function dynamic_integration_no_contact(state, damping)
 
-    Threads.@threads for node in nodes
+    Threads.@threads for node in state.nodes
+        # Average velocity for the time step assuming constant acceleration
+        node.velocity = node.velocity + (state.dt*0.5)*(node.force/(node.volume*node.material.density))
+    end
+    
+    # Velocity BCs
+    for bc in state.boundaryConditions
+        if bc isa BoundaryConditions.VelocityBC
+            BoundaryConditions.apply_bc(bc)
+        end
+    end
+    
+    Threads.@threads for node in state.nodes
+        # Update displacement with average velocity
+        node.displacement += node.velocity * state.dt
+
+        # Zero out force
+        @atomic node.force = zeros(3)
+    end
+
+    # Displacement BCs
+    for bc in state.boundaryConditions
+        if bc isa BoundaryConditions.DisplacementBC
+            BoundaryConditions.apply_bc(bc)
+        end
+    end
+
+    # Break bonds
+    Threads.@threads for bond in state.bonds
+        if !bond.isBroken && Bonds.should_break(bond)
+            Bonds.break!(bond)
+        end
+    end
+
+    # Apply bond force to nodes
+    Threads.@threads for bond in state.bonds
+        Bonds.apply_force(bond)
+    end
+
+    # Calculate final velocity
+    Threads.@threads for node in state.nodes
+        node.velocity = node.velocity*damping + state.dt*0.5 * (node.force / (node.volume * node.material.density))
+    end
+
+end
+
+function adr(state, stale::Bool)
+    dt = 9999.0
+
+    # Zero force
+    Threads.@threads for node in state.nodes
         @atomic node.force = zeros(3)
     end
     
     # Apply bond force to nodes
-    Threads.@threads for bond in bonds
+    Threads.@threads for bond in state.bonds
         Bonds.apply_force(bond)
     end
 
@@ -101,7 +150,7 @@ function adr(nodes::Vector{Nodes.Node},
 
     cn1s = zeros(Threads.nthreads())
     cn2s = zeros(Threads.nthreads())
-    Threads.@threads for node in nodes
+    Threads.@threads for node in state.nodes
         # Need old force and old average velocty
         if node.oldAverageVelocity[1] != 0
             cn1s[Threads.threadid()] -= (node.displacement[1]^2 * (node.force[1] - node.oldForce[1])) / (dt * node.oldAverageVelocity[1] * node.stableMass)
@@ -131,7 +180,7 @@ function adr(nodes::Vector{Nodes.Node},
         cn = 1.9
     end
     
-    Threads.@threads for node in nodes
+    Threads.@threads for node in state.nodes
         # if stale
         #     velhalf = dt * node.force * 0.5 / Nodes.mass(node) 
         # else
@@ -152,7 +201,7 @@ function adr(nodes::Vector{Nodes.Node},
 
     
     # Displacement BCs
-    for bc in bcs
+    for bc in state.boundaryConditions
         if bc isa BoundaryConditions.DisplacementBC
             BoundaryConditions.apply_bc(bc)
         elseif bc isa BoundaryConditions.StagedLoadingBC
@@ -166,42 +215,41 @@ function adr(nodes::Vector{Nodes.Node},
     end
 end
 
-function relax(nodes, bonds, bcs, kethreshold)
-    # println("Relaxing system...")
-
-    adr(nodes, bonds,bcs, 9999., true)
+function relax(state, kethreshold)
+    adr(state, true)
     for i in 1:3
-        adr(nodes,bonds,bcs,9999.,false)
+        adr(state ,false)
     end    
-    kinetic_energy = MoaUtil.KineticEnergy(nodes)
-    count = 1
+    kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
 
+    count = 1
     while kinetic_energy > kethreshold
-        TimeIntegration.adr(nodes, bonds, bcs, 9999., false)
-        kinetic_energy = MoaUtil.KineticEnergy(nodes)
+        adr(state, false)
+        kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
         count += 1
-        print("\r", count, " : ", kinetic_energy)
+        if count % 100 == 0
+            print("\r", count, " : ", kinetic_energy)
+        end
     end
-    # println("\nFinished realxation!")
 end
 
-function stagedloading(nodes, bonds, bcs, kethreshold::Float64)
+function stagedloading(state, kethreshold::Float64)
 
     # Advance tabs
-    for bc in bcs
+    for bc in state.boundaryConditions
         if bc isa BoundaryConditions.StagedLoadingBC
             BoundaryConditions.apply_bc(bc)
         end
     end
 
     # Relax system
-    TimeIntegration.relax(nodes, bonds, bcs, kethreshold)
+    TimeIntegration.relax(state, kethreshold)
 
 
     while true
         # Break bonds
         anybroken = fill(false, Threads.nthreads())
-        Threads.@threads for bond in bonds
+        Threads.@threads for bond in state.bonds
             if !bond.isBroken && Bonds.should_break(bond)
                 Bonds.break!(bond)
                 anybroken[Threads.threadid()] = true
@@ -211,7 +259,7 @@ function stagedloading(nodes, bonds, bcs, kethreshold::Float64)
         # println("Have any bonds broken: ", any(anybroken))
 
         # Relax system
-        TimeIntegration.relax(nodes, bonds, bcs, kethreshold*10)
+        TimeIntegration.relax(state, kethreshold*10)
 
 
         # repeat until no bonds break
