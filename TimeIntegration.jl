@@ -11,7 +11,33 @@ using ..ProximitySearch
 
 using LinearAlgebra: norm
 
-function dynamic_integration(state)
+
+function apply_contact_force(state)
+    if state.contact
+        cell_list = ProximitySearch.create_cell_list(state.nodes, state.contactDistance)
+        Threads.@threads for node in state.nodes
+            for other in ProximitySearch.sample_cell_list(cell_list, node, state.contactDistance)
+                # Dont add force if the node is a familiy member
+                isInFamily::Bool = false
+                for bond in node.family
+                    if bond.to == other
+                        isInFamily = true
+                        break
+                    end
+                end
+                if isInFamily
+                    continue
+                end
+                
+                distance::Float64 = Nodes.distance(node, other)
+                direction::Vector{Float64} = (other.position - node.position) / norm(other.position - node.position)
+                @atomic node.force += (state.contactCoefficient * ((state.contactDistance - distance) / state.contactDistance) * node.volume * other.volume) * direction
+            end
+        end
+    end
+end
+
+function dynamic_integration(state, damping)
 
     Threads.@threads for node in state.nodes
         # Average velocity for the time step assuming constant acceleration
@@ -52,32 +78,11 @@ function dynamic_integration(state)
         Bonds.apply_force(bond)
     end
 
-    # Contact force
-    cell_list = ProximitySearch.create_cell_list(state.nodes, state.horizon)
-    Threads.@threads for node in state.nodes
-        for other in ProximitySearch.sample_cell_list(cell_list, node, state.horizon)
-            # Dont add force if the node is a familiy member
-            isInFamily::Bool = false
-            for bond in node.family
-                if bond.to == other
-                    isInFamily = true
-                    break
-                end
-            end
-            if isInFamily
-                continue
-            end
-            
-            distance::Float64 = Nodes.distance(node, other)
-            direction::Vector{Float64} = (other.position - node.position) / norm(other.position - node.position)
-            emod::Float64 = (node.material.emod + other.material.emod) * 0.0005
-            @atomic node.force += emod * ((gridspacing - distance) / gridspacing) * direction * node.volume * other.volume
-        end
-    end
+    apply_contact_force(state)
 
+    # Calculate final velocity
     Threads.@threads for node in state.nodes
-        # Calculate final velocity
-        node.velocity = node.velocity + state.dt*0.5 * (node.force / (node.volume * node.material.density))
+        node.velocity = node.velocity*damping + state.dt*0.5 * (node.force / (node.volume * node.material.density))
     end
 
 end
@@ -142,6 +147,8 @@ function adr(state, stale::Bool)
     Threads.@threads for bond in state.bonds
         Bonds.apply_force(bond)
     end
+
+    apply_contact_force(state)
 
 
     # Calculates factor
