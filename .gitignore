@@ -25,6 +25,9 @@ Manifest.toml
 
 # Output files
 *.h5
+*.png
+*.gif
+
 
 # Unpublished research
 Private/
