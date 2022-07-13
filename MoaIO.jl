@@ -126,8 +126,20 @@ function parse_input(path::String)
     end
     println("Created ", length(forceProbes), " force probes")
 
+
+    # Contact properties
+    useContact = haskey(input, "Contact")
+    contactDistance = 0.0
+    contactCoefficient = 0.0
+    if useContact
+        @assert haskey(input["Contact"], "distance")
+        @assert haskey(input["Contact"], "coefficient")
+        contactDistance = input["Contact"]["distance"]
+        contactCoefficient = input["Contact"]["coefficient"]
+    end
+
     println("Finished parsing input!")
-    return Moa.state(gridspacing, horizon, dt, nodes, bonds, materials, boundaryConditions, forceProbes)
+    return Moa.state(gridspacing, horizon, dt, nodes, bonds, materials, boundaryConditions, forceProbes, useContact, contactDistance, contactCoefficient)
 end
 
 function write_output(path::String, state, timestep::Int64)
