@@ -222,7 +222,7 @@ function adr(state, stale::Bool)
     end
 end
 
-function relax(state, kethreshold)
+function relax(state, kethreshold, maxIterations)
     adr(state, true)
     for i in 1:3
         adr(state ,false)
@@ -230,7 +230,7 @@ function relax(state, kethreshold)
     kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
 
     count = 1
-    while kinetic_energy > kethreshold
+    while kinetic_energy > kethreshold && count < maxIterations
         adr(state, false)
         kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
         count += 1
@@ -240,7 +240,7 @@ function relax(state, kethreshold)
     end
 end
 
-function stagedloading(state, kethreshold::Float64)
+function stagedloading(state, kethreshold::Float64, maxIterations::Int64)
 
     # Advance tabs
     for bc in state.boundaryConditions
@@ -250,7 +250,7 @@ function stagedloading(state, kethreshold::Float64)
     end
 
     # Relax system
-    TimeIntegration.relax(state, kethreshold)
+    TimeIntegration.relax(state, kethreshold, maxIterations)
 
 
     while true
@@ -266,7 +266,7 @@ function stagedloading(state, kethreshold::Float64)
         # println("Have any bonds broken: ", any(anybroken))
 
         # Relax system
-        TimeIntegration.relax(state, kethreshold*10)
+        TimeIntegration.relax(state, kethreshold*10, maxIterations)
 
 
         # repeat until no bonds break
