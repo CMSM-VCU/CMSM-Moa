@@ -38,7 +38,7 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64)
     end
     shape = (dim_max - dim_min) / radius
     size1,size2,size3 = Int64(ceil(shape[1]))+1, Int64(ceil(shape[2]))+1,Int64(ceil(shape[3]))+1
-    println("Creating cell list (", size1, ", ", size2, ", ", size3, ")")
+    # println("Creating cell list (", size1, ", ", size2, ", ", size3, ")")
     data = Array{Vector{Nodes.Node}}(undef,size1,size2,size3);
     for i in eachindex(data)
         data[i] = Vector{Nodes.Node}()
@@ -55,7 +55,7 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64)
     end
 
         
-    println("Created cell list: ", size(data))
+    # println("Created cell list: ", size(data))
     return CellList(data, radius, dim_min, dim_max)
 end
 
