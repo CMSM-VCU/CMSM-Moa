@@ -117,6 +117,32 @@ function parse_input(path::String)
         end
     end
 
+    # Disconnects
+    println("# Bonds before disconnect(s): ", length(bonds))
+    if haskey(input, "Disconnect")
+        for dc in input["Disconnect"]
+            @assert haskey(dc, "ids")
+
+            # All the material ids to be disconnected from each other
+            ids = Vector{Int64}(dc["ids"])
+            
+            # Get all the bonds that are between these materials (distinct)
+            toRemove = [bond for bond in bonds if bond.from.material.id != bond.to.material.id &&
+                                                    bond.from.material.id ∈ ids &&
+                                                    bond.to.material.id ∈ ids]
+            println("Disconnecting ", length(toRemove), " bonds")
+                                                    
+            # Remove bonds from families without effecting damage
+            for bond in toRemove
+                Bonds.delete(bond)
+            end
+
+            # Remove bonds from global list
+            filter!(bond->bond∉toRemove, bonds)
+        end
+    end
+    println("# Bonds after disconnect(s): ", length(bonds))
+
     # Force probes
     forceProbes = Vector{AbstractTypes.AForceProbe}()
     if haskey(input, "ForceProbe")
