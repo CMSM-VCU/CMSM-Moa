@@ -1,29 +1,35 @@
 # START
 include("../../Moa.jl")
 include("../../Visualize.jl")
-Moa.parse_input("examples/ContactTest/contacttest.toml")
+state = Moa.parse_input("examples/ContactTest/contacttest.toml");
+println("DT: ", state.dt)
+println("contact: ", state.contact)
+println("contact distance: ", state.contactDistance)
+println("contact coefficient: ", state.contactCoefficient)
 
+println()
 
-# Moa.TimeIntegration.dynamic_integration(Moa.nodes,Moa.bonds,Moa.boundaryConditions, 0.88)
-
-Moa.TimeIntegration.dynamic_integration(Moa.nodes,Moa.bonds,Moa.boundaryConditions, 0.736)
-plotDisplacement(Moa.nodes, 1.0, 3)
+    # Move to before impact
+state.dt = 0.736
+Moa.TimeIntegration.dynamic_integration(state, 0.999)
+# plotDisplacement(state, 1.0, 3)
 
 ## LOOP
-dt = 0.0003
-for timestep in 1:3000
+
+state.dt = 0.02
+for timestep in 1:10
     println("t",timestep)
-    Moa.TimeIntegration.dynamic_integration(Moa.nodes,Moa.bonds,Moa.boundaryConditions, dt)
+    Moa.TimeIntegration.dynamic_integration(state, 0.999)
 end
-plotVelocityMagnitude(Moa.nodes, 1.0)
+plotVelocityMagnitude(state, 1.0)
 
 
  
 ## PYVISTA VISUALIZE
 plotDisplacement(Moa.nodes, 1000.0, 3)
 plotDisplacementMagnitude(Moa.nodes, 1.0)
-plotDamage(Moa.nodes, 1.0)
-plotMaterialID(Moa.nodes, 1.0)
+plotDamage(state, 1.0)
+plotMaterialID(state, 1.0)
 plotVelocity(Moa.nodes, 1.0, 3)
 plotVelocityMagnitude(Moa.nodes, 10.0)
 
