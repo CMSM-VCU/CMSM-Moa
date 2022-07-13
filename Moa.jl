@@ -20,6 +20,10 @@ mutable struct state
 
     boundaryConditions::Vector{AbstractTypes.ABoundaryCondition}
     forceProbes::Vector{AbstractTypes.AForceProbe}
+
+    contact::Bool
+    contactDistance::Float64
+    contactCoefficient::Float64
 end
 
 include("TimeIntegration.jl")
