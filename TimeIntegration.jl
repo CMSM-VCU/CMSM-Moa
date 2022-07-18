@@ -12,30 +12,6 @@ using ..ProximitySearch
 using LinearAlgebra: norm
 
 
-function apply_contact_force(state)
-    if state.contact
-        cell_list = ProximitySearch.create_cell_list(state.nodes, state.contactDistance)
-        Threads.@threads for node in state.nodes
-            for other in ProximitySearch.sample_cell_list(cell_list, node, state.contactDistance)
-                # Dont add force if the node is a familiy member
-                isInFamily::Bool = false
-                for bond in node.family
-                    if bond.to == other
-                        isInFamily = true
-                        break
-                    end
-                end
-                if isInFamily
-                    continue
-                end
-                
-                distance::Float64 = Nodes.distance(node, other)
-                direction::Vector{Float64} = (other.position - node.position) / norm(other.position - node.position)
-                @atomic node.force += (state.contactCoefficient * ((state.contactDistance - distance) / state.contactDistance) * node.volume * other.volume) * direction
-            end
-        end
-    end
-end
 
 function dynamic_integration(state, damping)
 
@@ -222,24 +198,6 @@ function adr(state, stale::Bool)
     end
 end
 
-function relax(state, kethreshold, maxIterations)
-    adr(state, true)
-    for i in 1:3
-        adr(state ,false)
-    end    
-    kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
-
-    count = 1
-    while kinetic_energy > kethreshold && count < maxIterations
-        adr(state, false)
-        kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
-        count += 1
-        if count % 100 == 0
-            print("\r", count, " : ", kinetic_energy)
-        end
-    end
-end
-
 function stagedloading(state, kethreshold::Float64, maxIterations::Int64)
 
     # Advance tabs
@@ -253,6 +211,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64)
     TimeIntegration.relax(state, kethreshold, maxIterations)
 
 
+    # Break bonds and relax till no bonds break
     while true
         # Break bonds
         anybroken = fill(false, Threads.nthreads())
@@ -274,5 +233,49 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64)
     end
 
 end
+
+function apply_contact_force(state)
+    if state.contact
+        cell_list = ProximitySearch.create_cell_list(state.nodes, state.contactDistance)
+        Threads.@threads for node in state.nodes
+            for other in ProximitySearch.sample_cell_list(cell_list, node, state.contactDistance)
+                # Dont add force if the node is a familiy member
+                isInFamily::Bool = false
+                for bond in node.family
+                    if bond.to == other
+                        isInFamily = true
+                        break
+                    end
+                end
+                if isInFamily
+                    continue
+                end
+                
+                distance::Float64 = Nodes.distance(node, other)
+                direction::Vector{Float64} = (other.position - node.position) / norm(other.position - node.position)
+                @atomic node.force += (state.contactCoefficient * ((state.contactDistance - distance) / state.contactDistance) * node.volume * other.volume) * direction
+            end
+        end
+    end
+end
+
+function relax(state, kethreshold, maxIterations)
+    adr(state, true)
+    for i in 1:3
+        adr(state ,false)
+    end    
+    kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
+
+    count = 1
+    while kinetic_energy > kethreshold && count < maxIterations
+        adr(state, false)
+        kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
+        count += 1
+        if count % 100 == 0
+            print("\r", count, " : ", kinetic_energy)
+        end
+    end
+end
+
 
 end

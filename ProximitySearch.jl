@@ -59,7 +59,6 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64)
     return CellList(data, radius, dim_min, dim_max)
 end
 
-
 function create_cell_list_reference_configuration(nodes::Vector{Nodes.Node}, radius::Float64)
     # Can be optimized
     positions = [node.position for node in nodes]
