@@ -15,7 +15,7 @@ mutable struct state
     dt::Float64
 
     nodes::Vector{Nodes.Node}
-    bonds::Vector{Bonds.Bond}
+    bonds::Vector{AbstractTypes.ABond}
     materials::Vector{AbstractTypes.AMaterial}
 
     boundaryConditions::Vector{AbstractTypes.ABoundaryCondition}

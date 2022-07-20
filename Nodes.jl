@@ -58,11 +58,10 @@ end
 
 "Stable mass calculation for Adaptive Dynamic Relaxation"
 function stableMass(node::Node, dt, horizon, gridspacing)
-    if node.material isa Materials.LinearElastic
-        return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.bond_constant / gridspacing
-    elseif node.material isa Materials.TanhElastic
-        return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.a * node.material.b / gridspacing
+    if node.material isa Materials.TanhElastic
+        0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.a * node.material.b / gridspacing
     end
+    return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.bond_constant / gridspacing
 end
 
 "Peridynamic damage as ratio of broken bonds to initial bonds.

@@ -90,8 +90,11 @@ function parse_input(path::String)
     cell_list = ProximitySearch.create_cell_list_reference_configuration(nodes, horizon)
     Threads.@threads for node in nodes
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
-            b::Bonds.Bond = Bonds.Bond(node, other)
-            push!(node.family, b)
+            if node.material isa Materials.CustomPlastic
+                push!(node.family, Bonds.PlasticBond(node, other))
+            else
+                push!(node.family, Bonds.Bond(node, other))
+            end
         end
     end
     bonds = vcat([node.family for node in nodes]...)
