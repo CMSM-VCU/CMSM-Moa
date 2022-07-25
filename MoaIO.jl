@@ -173,6 +173,8 @@ end
 
 function write_output(path::String, state, timestep::Int64)
     pd = PyCall.pyimport_conda("pandas", "pandas")
+
+    # Node data
     df = pd.DataFrame(
             data = [(
                 node.position.x,
@@ -191,7 +193,17 @@ function write_output(path::String, state, timestep::Int64)
                 ) for node in state.nodes],
             columns = ["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "dmg", "dmgi", "dmgm", "mat"]
     )
-
     df.to_hdf(path, "t"*lpad(timestep, 7, "0"), mode="a")
+
+
+    # for bc in state.boundaryConditions
+    #     if bc isa BoundaryConditions.StagedLoadingBC
+    #         # Write current displacement
+    #     end
+    # end
+
+    # for probe in state.forceProbes
+    #     # Write ForceProbes.mreasure_forcce(probe)
+    # end
 
 end
