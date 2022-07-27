@@ -1,14 +1,15 @@
 using PyCall
 using .Moa
 using CSV
+using LinearAlgebra: norm
 
-function MoaPlot(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, toVisualize::Vector{Float64})
+function MoaPlot(state, exaggeration::Float64, toVisualize::Vector{Float64})
     # Import pyvista
     pv = PyCall.pyimport_conda("pyvista", "pyvista", "conda-forge")
     PyCall.pyimport_conda("matplotlib.pyplot", "matplotlib", "conda-forge")
 
     # Plot positions
-    point_cloud = pv.PolyData([node.position+(node.displacement*exaggeration) for node in nodes])
+    point_cloud = pv.PolyData([node.position+(node.displacement*exaggeration) for node in state.nodes])
 
     # Create plotter
     plotter = pv.Plotter()
@@ -22,29 +23,38 @@ function MoaPlot(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, toVisuali
     plotter.show()
 end
 
-function plotDamage(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
-    MoaPlot(nodes, exaggeration, Moa.MoaUtil.GetDamageVector(Moa.nodes))
+function plotDamage(state, exaggeration::Float64)
+    MoaPlot(state, exaggeration, Moa.MoaUtil.GetDamageVector(state.nodes))
 end
 
-function plotInterfaceDamage(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
-    MoaPlot(nodes, exaggeration, [Float64(Moa.Nodes.interfaceDamage(node)) for node in nodes])
+function plotInterfaceDamage(state, exaggeration::Float64)
+    MoaPlot(state, exaggeration, [Float64(Moa.state.nodes.interfaceDamage(node)) for node in state.nodes])
 end
 
-function plotMaterialDamage(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
-    MoaPlot(nodes, exaggeration, [Float64(Moa.Nodes.materialDamage(node)) for node in nodes])
+function plotMaterialDamage(state, exaggeration::Float64)
+    MoaPlot(state, exaggeration, [Float64(Moa.state.nodes.materialDamage(node)) for node in state.nodes])
 end
 
-function plotDisplacement(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, axis::Int64)
-    MoaPlot(nodes, exaggeration, [node.displacement[axis] for node in nodes])
+function plotDisplacement(state, exaggeration::Float64, axis::Int64)
+    MoaPlot(state, exaggeration, [node.displacement[axis] for node in state.nodes])
 end
 
-function plotVelocity(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64, axis::Int64)
-    MoaPlot(nodes, exaggeration, [node.velocity[axis] for node in nodes])
+function plotDisplacementMagnitude(state, exaggeration::Float64)
+    MoaPlot(state, exaggeration, [norm(node.displacement) for node in state.nodes])
 end
 
-function plotMaterialID(nodes::Vector{Moa.Nodes.Node}, exaggeration::Float64)
-    MoaPlot(nodes, exaggeration, [Float64(node.material.id) for node in nodes])
+function plotVelocity(state, exaggeration::Float64, axis::Int64)
+    MoaPlot(state, exaggeration, [node.velocity[axis] for node in state.nodes])
 end
+
+function plotMaterialID(state, exaggeration::Float64)
+    MoaPlot(state, exaggeration, [Float64(node.material.id) for node in state.nodes])
+end
+
+function plotVelocityMagnitude(state, exaggeration::Float64)
+    MoaPlot(state, exaggeration, [norm(node.velocity) for node in state.nodes])
+end
+
 
 function plotOutput(filepath::String, exaggeration::Float64)
     grid = CSV.File(filepath, stripwhitespace=true,  comment="#")

@@ -38,6 +38,55 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64)
     end
     shape = (dim_max - dim_min) / radius
     size1,size2,size3 = Int64(ceil(shape[1]))+1, Int64(ceil(shape[2]))+1,Int64(ceil(shape[3]))+1
+    # println("Creating cell list (", size1, ", ", size2, ", ", size3, ")")
+    data = Array{Vector{Nodes.Node}}(undef,size1,size2,size3);
+    for i in eachindex(data)
+        data[i] = Vector{Nodes.Node}()
+    end
+
+
+    for node in nodes
+        # Insert node
+        pos = node.position + node.displacement
+        # index = []
+        push!(data[Int64(ceil((pos[1] - dim_min[1]) / radius))+1,
+                    Int64(ceil((pos[2] - dim_min[2]) / radius))+1,
+                    Int64(ceil((pos[3] - dim_min[3]) / radius))+1], node)
+    end
+
+        
+    # println("Created cell list: ", size(data))
+    return CellList(data, radius, dim_min, dim_max)
+end
+
+function create_cell_list_reference_configuration(nodes::Vector{Nodes.Node}, radius::Float64)
+    # Can be optimized
+    positions = [node.position for node in nodes]
+    dim_max = copy(positions[1])
+    dim_min = copy(positions[1])
+    for position in positions
+        if position[1] > dim_max[1]
+            dim_max[1] = position[1]
+        end
+        if position[2] > dim_max[2]
+            dim_max[2] = position[2]
+        end
+        if position[3] > dim_max[3]
+            dim_max[3] = position[3]
+        end
+        if position[1] < dim_min[1]
+            dim_min[1] = position[1]
+        end
+        if position[2] < dim_min[2]
+            dim_min[2] = position[2]
+        end
+        if position[3] < dim_min[3]
+            dim_min[3] = position[3]
+        end
+    end
+    shape = (dim_max - dim_min) / radius
+    size1,size2,size3 = Int64(ceil(shape[1]))+1, Int64(ceil(shape[2]))+1,Int64(ceil(shape[3]))+1
+    println("Creating cell list (", size1, ", ", size2, ", ", size3, ")")
     data = Array{Vector{Nodes.Node}}(undef,size1,size2,size3);
     for i in eachindex(data)
         data[i] = Vector{Nodes.Node}()

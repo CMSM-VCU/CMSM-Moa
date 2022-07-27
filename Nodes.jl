@@ -3,9 +3,8 @@ module Nodes
 using StaticArrays
 using ..Materials
 using ..AbstractTypes
-# abstract type AbstractNode end
+using LinearAlgebra: norm
 
-# mutable struct Node <: AbstractNode
 mutable struct Node{M}
     position::MVector{3, Float64}
     displacement::MVector{3, Float64}
@@ -52,18 +51,21 @@ Node(pos::MVector{3, Float64}, m::Materials.AMaterial, grid_spacing::Float64) = 
     [])
 
 
+"Mass of the node"
 function mass(node::Node)
     return node.volume * node.material.density
 end
 
+"Stable mass calculation for Adaptive Dynamic Relaxation"
 function stableMass(node::Node, dt, horizon, gridspacing)
-    if node.material isa Materials.LinearElastic
-        return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.bond_constant / gridspacing
-    elseif node.material isa Materials.TanhElastic
-        return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.a * node.material.b / gridspacing
+    if node.material isa Materials.TanhElastic
+        0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.a * node.material.b / gridspacing
     end
+    return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.bond_constant / gridspacing
 end
 
+"Peridynamic damage as ratio of broken bonds to initial bonds.
+Nodes with no initial bonds have a damage of -1"
 function damage(node::Node)
     numbonds::Int64 = length(node.family)
     numbrokenbonds:: Int64 = 0
@@ -81,6 +83,8 @@ function damage(node::Node)
     return damage
 end
 
+"Ratio of broken bonds between materials with the same id to total bonds between 
+materials with the same id"
 function materialDamage(node::Node)
     bonds_relevant = [bond for bond in node.family if bond.from.material.id == bond.to.material.id]
     numbonds::Int64 = length(bonds_relevant)
@@ -98,6 +102,8 @@ function materialDamage(node::Node)
     return damage
 end
 
+"Ratio of broken bonds between materials with different ids to total bonds between 
+materials with different ids"
 function interfaceDamage(node::Node)
     bonds_relevant = [bond for bond in node.family if bond.from.material.id != bond.to.material.id]
     numbonds::Int64 = length(bonds_relevant)
@@ -113,6 +119,13 @@ function interfaceDamage(node::Node)
     damage::Float64 = 0
     numbonds == 0 ? damage = 0 : damage = numbrokenbonds / numbonds
     return damage
+end
+
+"Distance between two nodes"
+function distance(a::Node, b::Node)
+    return norm((a.position[1] - b.position[1])^2 +
+                (a.position[2] - b.position[2])^2 +
+                (a.position[3] - b.position[3])^2)
 end
 
 end

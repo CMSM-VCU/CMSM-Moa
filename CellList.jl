@@ -124,33 +124,3 @@ function sample_cell_list(cell_list::CellList, node::Main.PD.Node, radius::Float
     end
     return [n for n in result if norm(n.position+n.displacement-node.position-node.displacement) < radius && n != node]
 end
-
-
-# nodes = Vector{Main.PD.Node}()
-# mat = PD.Material(1, 1., 0.1, 75)
-
-# push!(nodes, Main.PD.Node(-1.5,-1.1,-1.3,mat, 1.))
-# push!(nodes, Main.PD.Node(1.4,1.6,1.8,mat, 1.))
-
-# @time create_cell_list(nodes, 0.7);
-# @time create_cell_list_new(nodes, 0.7);
-
-# Threads.nthreads()
-
-
-
-
-# a = Main.PD.Node(1.,0.,0.,mat, 1.)
-# sample_cell_list(cell_list, a, 1.314)
-
-
-
-
-
-
-# push!(nodes, Main.PD.Node(0.,0.,0.,mat, 1.))
-# push!(nodes, Main.PD.Node(1.,0.,0.,mat, 1.))
-# push!(nodes, Main.PD.Node(2.,0.,0.,mat, 1.))
-# push!(nodes, Main.PD.Node(3.,0.,0.,mat, 1.))
-# create_cell_list(nodes)
-

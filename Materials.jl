@@ -1,19 +1,24 @@
 module Materials
 
 using ..AbstractTypes: AMaterial
+using DelimitedFiles
+
 
 mutable struct LinearElastic <: AMaterial
     id::Int64
     density::Float64
     critical_strain::Float64
     bond_constant::Float64
+    emod::Float64
 end
 
 Base.copy(material::LinearElastic) = LinearElastic(
         material.id,
         material.density,
         material.critical_strain,
-        material.bond_constant)
+        material.bond_constant,
+        material.emod)
+
 
 mutable struct TanhElastic <: AMaterial
     id::Int64
@@ -31,6 +36,7 @@ mutable struct TanhElastic <: AMaterial
     # Initial stiffness is a * b
     a::Float64
     b::Float64
+    emod::Float64
 end
 
 Base.copy(material::TanhElastic) = TanhElastic(material.id,
@@ -38,32 +44,92 @@ Base.copy(material::TanhElastic) = TanhElastic(material.id,
     material.interface_stiffness_coeff,
     material.critical_strain,
     material.a,
-    material.b)
+    material.b,
+    material.emod)
 
-mutable struct CustomMaterial <: AMaterial
+struct CustomPlastic <: AMaterial
     id::Int64
     density::Float64
+    critical_strain::Float64
+
+    # initial bond constant (only needed for stable timestep estimation, if yields a lot timestep will be severe underestimation)
+    bond_constant::Float64
+    emod::Float64
+    # Stress-strain response first column is strain, second column is force density [N/m^6]
+    customForceResponse::Matrix{Float64}
+
+    # # Overrides default constructor to sort stress-strain response
+    # CustomPlastic(id::Int64,
+    #         density::Float64,
+    #         critical_strain::Float64,
+    #         bond_constant::Float64,
+    #         emod::Float64,
+    #         customForceResponse::Matrix{Float64}) = 
+    #         new(id,
+    #         density,
+    #         critical_strain,
+    #         bond_constant,
+    #         emod,
+    #         customForceResponse[sortperm(customForceResponse[:,1]), :])
 end
 
-function parse_material(inputDict)
-    # A material needs at least these 3 properties
-    @assert haskey(inputDict, "type")
-    @assert haskey(inputDict, "density")
-    @assert haskey(inputDict, "id")
 
-    if inputDict["type"] == "LinearElastic"
-        return Materials.LinearElastic(inputDict["id"], inputDict["density"], inputDict["critical_strain"], inputDict["bond_constant"])
-    elseif inputDict["type"] == "TanhElastic"
-        @assert haskey(inputDict, "interface_stiffness_coeff")
-        return Materials.TanhElastic(inputDict["id"], inputDict["density"], inputDict["interface_stiffness_coeff"], inputDict["critical_strain"], inputDict["a"], inputDict["b"])
-    elseif inputDict["type"] == "Custom"
-        return Materials.CustomMaterial(inputDict["id"], inputDict["density"])
+
+Base.copy(material::CustomPlastic) = CustomPlastic(
+        material.id,
+        material.density,
+        material.critical_strain,
+        material.bond_constant,
+        material.emod,
+        material.customForceResponse)
+
+
+
+"Creates material from input dictionary"
+function parse_material(input)
+    # A material needs at least these 3 properties
+    @assert haskey(input, "type")
+    @assert haskey(input, "density")
+    @assert haskey(input, "id")
+
+    if input["type"] == "LinearElastic"
+        return Materials.LinearElastic(
+                                        input["id"],
+                                        input["density"],
+                                        input["critical_strain"],
+                                        input["bond_constant"],
+                                        Float64(input["bond_constant"]*6)
+                                    )
+
+    elseif input["type"] == "TanhElastic"
+        @assert haskey(input, "interface_stiffness_coeff")
+        return Materials.TanhElastic(
+                                        input["id"],
+                                        input["density"],
+                                        input["interface_stiffness_coeff"],
+                                        input["critical_strain"],
+                                        input["a"],
+                                        input["b"],
+                                        Float64(input["a"]) * Float64(input["b"])
+                                    )
+    elseif input["type"] == "CustomPlastic"
+        @assert haskey(input, "path")
+
+        forceResponse = readdlm(input["path"], ',', Float64, skipstart=1)
+
+        return CustomPlastic(input["id"],input["density"],input["critical_strain"], input["bond_constant"], Float64(input["bond_constant"])*6, forceResponse)
+
+        # Parse path
+        # Create struct
+        
     else
         # Material type not known
-        println("#### Unknown type from material: ", inputDict["id"])
+        println("Unknown type from material: ", input["id"])
         throw(Exception)
     end
 end
+
+
 
 
 end

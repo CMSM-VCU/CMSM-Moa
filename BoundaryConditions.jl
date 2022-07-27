@@ -3,12 +3,23 @@ using LinearAlgebra
 using ..Materials
 using ..Nodes
 using ..Bonds
+using ..AbstractTypes: ABoundaryCondition
 
-abstract type AbstractBoundaryCondition end
 
-struct DisplacementBC <: AbstractBoundaryCondition
+struct DisplacementBC <: ABoundaryCondition
     nodes::Vector{Nodes.Node}
     displacement::Vector{Float64}
+end
+
+struct VelocityBC <: ABoundaryCondition
+    nodes::Vector{Nodes.Node}
+    velocity::Vector{Float64}
+end
+
+mutable struct StagedLoadingBC <: ABoundaryCondition
+    nodes::Vector{Nodes.Node}
+    currentDisplacement::Vector{Float64}
+    increment::Vector{Float64}
 end
 
 function apply_bc(bc::DisplacementBC)
@@ -20,22 +31,10 @@ function apply_bc(bc::DisplacementBC)
     end
 end
 
-
-struct VelocityBC <: AbstractBoundaryCondition
-    nodes::Vector{Nodes.Node}
-    velocity::Vector{Float64}
-end
-
 function apply_bc(bc::VelocityBC)
     Threads.@threads for node in bc.nodes
         node.velocity = bc.velocity
     end
-end
-
-mutable struct StagedLoadingBC <: AbstractBoundaryCondition
-    nodes::Vector{Nodes.Node}
-    currentDisplacement::Vector{Float64}
-    increment::Vector{Float64}
 end
 
 function apply_bc(bc::StagedLoadingBC)
@@ -45,6 +44,8 @@ function apply_bc(bc::StagedLoadingBC)
     end
 end
 
+"All nodes within the specified volume
+(should move this function somewhere else and add more options)"
 function get_nodes_within_volume(nodes, volume)
     # Push all relevant nodes
     n::Vector{Nodes.Node} = Vector{Nodes.Node}()
@@ -64,7 +65,7 @@ function get_nodes_within_volume(nodes, volume)
     return n
 end
 
-
+"Creates boundary conditions from an input dictionary"
 function parse_bc(inputDict, nodes)
     @assert haskey(inputDict, "type")
     @assert haskey(inputDict, "volume")
