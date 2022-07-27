@@ -154,7 +154,9 @@ function relax(nodes, bonds, bcs, kethreshold)
         TimeIntegration.adr(nodes, bonds, bcs, 9999., false)
         kinetic_energy = MoaUtil.KineticEnergy(nodes)
         count += 1
-        print("\r", count, " : ", kinetic_energy)
+        if count % 100 == 0
+            print("\r", count, " : ", kinetic_energy)
+        end
     end
     # println("\nFinished realxation!")
 end

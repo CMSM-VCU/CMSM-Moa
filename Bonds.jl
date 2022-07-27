@@ -70,8 +70,8 @@ end
 
 "Breaks the bond"
 function break!(bond::Bond)
-    bond.isBroken && println("WARNING! BREAKING BOND THAT IS ALREADY BROKEN!")
-    println("SNAPPPPP: ", bond.from.position[1], ", ", bond.to.position[1])
+    # bond.isBroken && println("WARNING! BREAKING BOND THAT IS ALREADY BROKEN!")
+    # println("SNAPPPPP: ", bond.from.position[1], ", ", bond.to.position[1])
     bond.isBroken = true
 end
 
