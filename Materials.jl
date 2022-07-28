@@ -37,6 +37,10 @@ mutable struct TanhElastic <: AMaterial
     a::Float64
     b::Float64
     emod::Float64
+
+    # Strongly Connected To
+    stronglyConnected::Vector{TanhElastic}
+    
 end
 
 Base.copy(material::TanhElastic) = TanhElastic(material.id,
@@ -45,7 +49,10 @@ Base.copy(material::TanhElastic) = TanhElastic(material.id,
     material.critical_strain,
     material.a,
     material.b,
-    material.emod)
+    material.emod,
+    [])
+
+TanhElastic(id::Int64,density::Float64,interface_stiffness_coeff::Float64,critical_strain::Float64,a::Float64,b::Float64,emod::Float64)= TanhElastic(id,density,interface_stiffness_coeff,critical_strain,a,b,emod, [])
 
 struct CustomPlastic <: AMaterial
     id::Int64

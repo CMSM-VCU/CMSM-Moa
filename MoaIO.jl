@@ -12,9 +12,9 @@ function parse_input(path::String)
     horizon = Float64(input["horizon"])
 
     # Parse materials
-    materials = Vector{Materials.AMaterial}()
+    materials = Dict{Int64, Materials.AMaterial}()
     defaultMaterial = Materials.parse_material(input["MaterialDefault"])
-    push!(materials, defaultMaterial)
+    materials[defaultMaterial.id] = defaultMaterial
 
     if haskey(input, "Material")
         for materialInput in input["Material"]
@@ -22,8 +22,8 @@ function parse_input(path::String)
             mat::Materials.AMaterial = Materials.parse_material(materialInput)
             
             # Each material should have a unique id
-            @assert !(mat.id in [material.id for material in materials])
-            push!(materials, mat)
+            @assert !haskey(materials, mat.id)
+            materials[mat.id] = mat
         end
     end
 
@@ -32,7 +32,7 @@ function parse_input(path::String)
     if haskey(input, "dt")
         dt = Float64(input["dt"])
     else
-        dt = gridspacing / sqrt(maximum([mat.emod for mat in materials]) / minimum([mat.density for mat in materials]))
+        dt = gridspacing / sqrt(maximum([mat.emod for (id,mat) in materials]) / minimum([mat.density for (id,mat) in materials]))
     end
 
     if dt <= 0
@@ -53,7 +53,7 @@ function parse_input(path::String)
 
         for row in input_grid
             mat = defaultMaterial
-            material_candidates = [material for material in materials if material.id == row[:material]]
+            material_candidates = [material for (id,material) in materials if material.id == row[:material]]
 
             if size(material_candidates)[1] != 0
                 mat = first(material_candidates)
@@ -61,7 +61,7 @@ function parse_input(path::String)
                 # Create copy of default material with new material number
                 mat = copy(defaultMaterial)
                 mat.id = row[:material]
-                push!(materials, mat)
+                materials[mat.id] = mat
             end
             n ::Nodes.Node = Nodes.Node(
                                         Float64(row[:x]),

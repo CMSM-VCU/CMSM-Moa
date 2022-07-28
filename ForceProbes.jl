@@ -30,17 +30,17 @@ end
 "Creates force probes from input dictionary
 (should generalize this)"
 function parse_force_probe_plane(input, bonds)
-    @assert haskey(input, "point_on_plane")
+    @assert haskey(input, "pointOnPlane")
     @assert haskey(input, "normal")
-    point_on_plane::Vector{Float64} = input["point_on_plane"]
+    pointOnPlane::Vector{Float64} = input["pointOnPlane"]
     normal::Vector{Float64} = input["normal"]
 
     bondsPositive = Vector{ABond}()
     bondsNegative = Vector{ABond}()
 
     for bond in bonds
-        fromDist = signed_distance_from_plane(convert(Vector{Float64}, bond.from.position), point_on_plane, normal)
-        toDist = signed_distance_from_plane(convert(Vector{Float64}, bond.to.position), point_on_plane, normal)
+        fromDist = signed_distance_from_plane(convert(Vector{Float64}, bond.from.position), pointOnPlane, normal)
+        toDist = signed_distance_from_plane(convert(Vector{Float64}, bond.to.position), pointOnPlane, normal)
         if fromDist < 0 && toDist > 0
             push!(bondsPositive, bond)
         elseif fromDist > 0 && toDist < 0
@@ -48,7 +48,7 @@ function parse_force_probe_plane(input, bonds)
         end
     end
 
-    return ForceProbePlane(bondsPositive,bondsNegative,point_on_plane,normal)
+    return ForceProbePlane(bondsPositive,bondsNegative,pointOnPlane,normal)
 end
 
 

@@ -16,7 +16,7 @@ mutable struct state
 
     nodes::Vector{Nodes.Node}
     bonds::Vector{AbstractTypes.ABond}
-    materials::Vector{AbstractTypes.AMaterial}
+    materials::Dict{Int64, AbstractTypes.AMaterial}
 
     boundaryConditions::Vector{AbstractTypes.ABoundaryCondition}
     forceProbes::Vector{AbstractTypes.AForceProbe}
