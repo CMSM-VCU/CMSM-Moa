@@ -112,7 +112,7 @@ function dynamic_integration_no_contact(state, damping)
 end
 
 function adr(state, stale::Bool)
-    dt = 9999.0
+    dt = 1.0
 
     # Zero force
     Threads.@threads for node in state.nodes
@@ -121,7 +121,7 @@ function adr(state, stale::Bool)
     
     # Apply bond force to nodes
     Threads.@threads for bond in state.bonds
-        Bonds.apply_force(bond)
+        Bonds.applyforce!(bond)
     end
 
     apply_contact_force(state)
@@ -216,7 +216,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64)
         # Break bonds
         anybroken = fill(false, Threads.nthreads())
         Threads.@threads for bond in state.bonds
-            if !bond.isBroken && Bonds.should_break(bond)
+            if !bond.isBroken && Bonds.shouldbreak(bond)
                 Bonds.break!(bond)
                 anybroken[Threads.threadid()] = true
             end

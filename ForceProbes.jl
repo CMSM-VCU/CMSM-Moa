@@ -19,10 +19,10 @@ end
 function measure_force(fp::ForceProbePlane)
     force = 0
     for bond in fp.bondsPositive
-        force += dot(Bonds.get_force(bond), fp.normal)
+        force += dot(Bonds.getforce(bond), fp.normal)
     end
     for bond in fp.bondsNegative
-        force -= dot(Bonds.get_force(bond), fp.normal)
+        force -= dot(Bonds.getforce(bond), fp.normal)
     end
     return force * 0.5
 end
