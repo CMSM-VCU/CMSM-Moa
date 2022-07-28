@@ -198,7 +198,7 @@ function adr(state, stale::Bool)
     end
 end
 
-function stagedloading(state, kethreshold::Float64, maxIterations::Int64)
+function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIterations::Int64)
 
     # Advance tabs
     for bc in state.boundaryConditions
@@ -208,7 +208,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64)
     end
 
     # Relax system
-    TimeIntegration.relax(state, kethreshold, maxIterations)
+    TimeIntegration.relax(state, kethreshold, maxIterations, minIterations)
 
 
     # Break bonds and relax till no bonds break
@@ -259,9 +259,9 @@ function apply_contact_force(state)
     end
 end
 
-function relax(state, kethreshold, maxIterations)
+function relax(state, kethreshold, maxIterations, minIterations)
     adr(state, true)
-    for i in 1:3
+    for i in 1:minIterations
         adr(state ,false)
     end    
     kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
