@@ -1,8 +1,7 @@
 # Run as julia -t [NUM THREADS] [PATH TO THIS FILE] [PATH TO INPUT FILE]
 include("../../Moa.jl")
-state = Moa.parse_input("./cases/BundleLevelTensile/HAHB.toml");
+state = Moa.parse_input("./cases/BundleLevelTensile/HAHBTransverse.toml");
 state.dt = 1.0
-
 
 matIDs = [id for (id,material) in state.materials]
 
@@ -47,22 +46,23 @@ for id in matIDs
     push!(state.materials[id].stronglyConnected, id)
 end
 
-output_folder = "./cases/BundleLevelTensile/output"
+
+output_folder = "./cases/BundleLevelTensile/outputTransverse"
 if !isdir(output_folder)
     mkdir(output_folder)
 end
-open(output_folder*"/HAHB.csv", "w") do file
+open(output_folder*"/HAHBTransverse.csv", "w") do file
     write(file, "Step, Half Displacement [nm], Halfway Force [nN]\n")
 end;
 
 for i in 1:75
-    Moa.TimeIntegration.stagedloading(state, 6.0e-13, 15000, 400)
+    Moa.TimeIntegration.stagedloading(state, 0.5e-13, 15000, 400)
 
     Moa.write_output(output_folder*"/HAHB.h5", state, i)
     
     force = Moa.ForceProbes.measure_force(state.forceProbes[1])
     halfDisplacement = state.boundaryConditions[2].currentDisplacement[3]
-    open(output_folder*"/HAHB.csv", "a") do file
+    open(output_folder*"/HAHBTransverse.csv", "a") do file
         write(file, string(i) * ", " * string(halfDisplacement) * ", " * string(force) * "\n")
     end;
 

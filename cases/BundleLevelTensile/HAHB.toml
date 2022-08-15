@@ -1,0 +1,53 @@
+gridspacing = 1.0
+horizon = 3.015
+
+
+[[Grid]]
+    path = "cases/BundleLevelTensile/n250_110x110x500_p100_s1-3_1.grid"
+
+[MaterialDefault]
+    type = "TanhElastic"
+    id = 1
+    density = 10.4
+    
+    interface_stiffness_coeff = 0.005
+
+    # Properties for 403-N8M8
+    critical_strain = 0.260001
+    # a = 94.489787353
+    # Using 1/6th of the bond to preserve SED for a 1D simulation
+    a = 15.74829789216667
+    b = 5.508977345
+
+
+# First Tab
+[[BC]]
+    type = "Staged Loading"
+    increment = [0.0, 0.0, -1.0]
+    volume =   [-9999.0,9999.0,
+                -9999.0,9999.0,
+                -1.0,  3.5,]
+[[NoFail]]
+    volume =   [-9999.0,9999.0,
+                -9999.0,9999.0,
+                -1.0,  3.5,]
+
+
+# Second tab
+[[BC]]
+    type = "Staged Loading"
+    increment = [0.0, 0.0, 1.0]
+    volume = [-9999.0,  9999.0,
+                -9999.0,  9999.0,
+                496.5,  500.0,]
+[[NoFail]]
+    volume = [-9999.0,  9999.0,
+                -9999.0,  9999.0,
+                496.5,  500.0,]
+
+
+
+[[ForceProbe]]
+    type = "Plane"
+    pointOnPlane = [0.0, 0.0, 250.0]
+    normal = [0.0, 0.0, 1.0]
