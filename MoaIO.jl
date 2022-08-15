@@ -191,7 +191,8 @@ function write_output(path::String, state, timestep::Int64)
                 Nodes.interfaceDamage(node),
                 Nodes.materialDamage(node)
                 ) for node in state.nodes],
-            columns = ["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "dmg", "dmgi", "dmgm", "mat"]
+            columns = ["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "mat", "dmg", "dmgi", "dmgm"]
+            # columns=["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "dmg", "dmgi", "dmgm", "mat"]
     )
     df.to_hdf(path, "t"*lpad(timestep, 7, "0"), mode="a")
 

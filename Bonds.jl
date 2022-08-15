@@ -81,7 +81,7 @@ function getforce(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
     direction::SVector{3,Float64} = deformed_bond_vector ./ deformed_bond_length
 
     # NON-GENERALIZED IMPLEMENTATION: CHECKS IF IT IS IN THE 
-    if bond.from.material ∈ bond.to.material.stronglyConnected
+    if bond.from.material.id ∈ bond.to.material.stronglyConnected
         return  direction * (bond.from.material.a*tanh(bond.from.material.b*strain) * bond.to.volume * bond.from.volume)
     else
         return  direction * (bond.from.material.a*bond.from.material.b*strain * bond.to.volume * bond.from.volume * min(bond.from.material.interface_stiffness_coeff, bond.to.material.interface_stiffness_coeff))

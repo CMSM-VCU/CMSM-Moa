@@ -111,8 +111,8 @@ function dynamic_integration_no_contact(state, damping)
 
 end
 
-function adr(state, stale::Bool)
-    dt = 1.0
+function adr(state, stale::Bool, contact=true)
+    dt = 9999.
 
     # Zero force
     Threads.@threads for node in state.nodes
@@ -124,8 +124,7 @@ function adr(state, stale::Bool)
         Bonds.applyforce!(bond)
     end
 
-    apply_contact_force(state)
-
+    contact && apply_contact_force(state)
 
     # Calculates factor
     cn = 0.0
@@ -225,7 +224,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIte
         # println("Have any bonds broken: ", any(anybroken))
 
         # Relax system
-        TimeIntegration.relax(state, kethreshold*10, maxIterations)
+        TimeIntegration.relax(state, kethreshold*10, maxIterations, minIterations)
 
 
         # repeat until no bonds break
@@ -260,15 +259,15 @@ function apply_contact_force(state)
 end
 
 function relax(state, kethreshold, maxIterations, minIterations)
-    adr(state, true)
+    adr(state, true, false)
     for i in 1:minIterations
-        adr(state ,false)
+        adr(state ,false, false)
     end    
     kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
 
     count = 1
     while kinetic_energy > kethreshold && count < maxIterations
-        adr(state, false)
+        adr(state, false, false)
         kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
         count += 1
         if count % 100 == 0
