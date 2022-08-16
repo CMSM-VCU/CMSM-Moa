@@ -79,12 +79,12 @@ function setup(inputfilepath=ARGS[1], base_folder=ARGS[2], output_folder=ARGS[2]
         push!(state.materials[id].stronglyConnected, id)
     end
 
-    if !isdir(output_folder)
-        mkdir(output_folder)
-    end
-    open(output_folder*"/ForcePlane.csv", "w") do file
-        write(file, "Step, Half Displacement [nm], Halfway Force [nN]\n")
-    end;
+    # if !isdir(output_folder)
+    #     mkdir(output_folder)
+    # end
+    # open(output_folder*"/ForcePlane.csv", "w") do file
+    #     write(file, "Step, Half Displacement [nm], Halfway Force [nN]\n")
+    # end;
 
     return state
 end
