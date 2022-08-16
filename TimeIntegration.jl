@@ -44,7 +44,7 @@ function dynamic_integration(state, damping)
 
     # Break bonds
     Threads.@threads for bond in state.bonds
-        if !bond.isBroken && Bonds.should_break(bond)
+        if !bond.isBroken && Bonds.shouldbreak(bond)
             Bonds.break!(bond)
         end
     end
@@ -94,14 +94,14 @@ function dynamic_integration_no_contact(state, damping)
 
     # Break bonds
     Threads.@threads for bond in state.bonds
-        if !bond.isBroken && Bonds.should_break(bond)
+        if !bond.isBroken && Bonds.shouldbreak(bond)
             Bonds.break!(bond)
         end
     end
 
     # Apply bond force to nodes
     Threads.@threads for bond in state.bonds
-        Bonds.apply_force(bond)
+        Bonds.applyforce!(bond)
     end
 
     # Calculate final velocity
@@ -197,7 +197,7 @@ function adr(state, stale::Bool, contact=true)
     end
 end
 
-function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIterations::Int64)
+function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIterations::Int64, contact=true)
 
     # Advance tabs
     for bc in state.boundaryConditions
@@ -207,7 +207,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIte
     end
 
     # Relax system
-    TimeIntegration.relax(state, kethreshold, maxIterations, minIterations)
+    TimeIntegration.relax(state, kethreshold, maxIterations, minIterations, contact)
 
 
     # Break bonds and relax till no bonds break
@@ -224,7 +224,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIte
         # println("Have any bonds broken: ", any(anybroken))
 
         # Relax system
-        TimeIntegration.relax(state, kethreshold*10, maxIterations, minIterations)
+        TimeIntegration.relax(state, kethreshold*10, maxIterations, minIterations, contact)
 
 
         # repeat until no bonds break
@@ -258,21 +258,21 @@ function apply_contact_force(state)
     end
 end
 
-function relax(state, kethreshold, maxIterations, minIterations)
-    adr(state, true, false)
+function relax(state, kethreshold, maxIterations, minIterations, contact=true)
+    adr(state, true, contact)
     for i in 1:minIterations
-        adr(state ,false, false)
+        adr(state ,false, contact)
     end    
     kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
 
     count = 1
     while kinetic_energy > kethreshold && count < maxIterations
-        adr(state, false, false)
+        adr(state, false, contact)
         kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
         count += 1
-        if count % 100 == 0
-            print("\r", count, " : ", kinetic_energy)
-        end
+        # if count % 100 == 0
+        #     print("\r", count, " : ", kinetic_energy)
+        # end
     end
 end
 
