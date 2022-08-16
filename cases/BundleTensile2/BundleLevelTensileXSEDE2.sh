@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --partition=RM*
+#SBATCH --partition=RM
 
 
 # For shared memory parallelization
@@ -8,7 +8,7 @@
 #SBATCH	--ntasks=1
 #SBATCH	--nodes=1
 
-#SBATCH --time 99-00:00:00
+#SBATCH --time 0-01:00:00
 
 #SBATCH	--account=watsonkh
 #SBATCH	--mail-user=watsonkh@vcu.edu
