@@ -3,7 +3,7 @@ horizon = 3.015
 
 
 [[Grid]]
-    path = "/lustre/home/watsonkh/CMSM-Moa/cases/BundleTensile2/test_cases_5/high_align_high_branch/n250_110x110x500_p100_s1-3_1.grid"
+    path = "./cases/BundleTensile2/test_cases_5/high_align_high_branch/n250_110x110x500_p100_s1-3_1.grid"
 
 [MaterialDefault]
     type = "TanhElastic"
