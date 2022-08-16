@@ -132,4 +132,4 @@ println("Running Main() with "*string(Threads.nthreads())*" threads:")
 
 
 println("Running Main() 100 times with "*string(Threads.nthreads())*" threads:")
-@time main_dynamic_n(state, 100)
+@time main_dynamic_n(state, 200)

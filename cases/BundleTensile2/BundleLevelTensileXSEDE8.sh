@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --partition=basic
+#SBATCH --partition=RM*
 
 
 # For shared memory parallelization
