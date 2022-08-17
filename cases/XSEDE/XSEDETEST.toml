@@ -1,0 +1,18 @@
+gridspacing = 1.0
+horizon = 3.015
+
+[[Grid]]
+    path = "./cases/XSEDE/big_cube.grid"
+
+[MaterialDefault]
+    # Glass plate
+    # sspnom = 2600
+    # density = 2200
+    # ... k = 14,872,000,000
+    # stable time step = gridspacing / sqrt(k / density) = gridspacing / sspnom
+    type = "LinearElastic"
+    id = 1
+    density = 2000.0
+    # 18k / (pi*horizon)
+    bond_constant = 10000000
+    critical_strain = 0.015
