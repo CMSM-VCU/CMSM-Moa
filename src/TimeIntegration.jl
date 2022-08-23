@@ -1,20 +1,16 @@
-module TimeIntegration
-
-using ..Materials
-using ..Nodes
-using ..Bonds
-using ..BoundaryConditions
-using ..AbstractTypes
-using ..MoaUtil
-using ..TimeIntegration
-using ..ProximitySearch
+using Materials
+using Nodes
+using Bonds
+using BoundaryConditions
+using AbstractTypes
+using MoaUtil
+using ProximitySearch
 
 using LinearAlgebra: norm
 
 
 
-function dynamic_integration(state, damping)
-
+function dynamic_integration(state, damping::Float64, contact::Bool, failure::Bool)
     Threads.@threads for node in state.nodes
         # Average velocity for the time step assuming constant acceleration
         node.velocity = node.velocity + (state.dt*0.5)*(node.force/(node.volume*node.material.density))
@@ -37,71 +33,28 @@ function dynamic_integration(state, damping)
 
     # Displacement BCs
     for bc in state.boundaryConditions
-        if bc isa BoundaryConditions.DisplacementBC
+        if bc isa BoundaryConditions.DisplacementBC || bc isa BoundaryConditions.StagedLoadingBC
             BoundaryConditions.apply_bc(bc)
         end
     end
 
-    # Break bonds
-    Threads.@threads for bond in state.bonds
-        if !bond.isBroken && Bonds.should_break(bond)
-            Bonds.break!(bond)
+    if failure
+        # Break bonds
+        Threads.@threads for bond in state.bonds
+            if !bond.isBroken && Bonds.shouldbreak(bond)
+                Bonds.break!(bond)
+            end
         end
     end
 
     # Apply bond force to nodes
     Threads.@threads for bond in state.bonds
-        Bonds.apply_force(bond)
+        Bonds.applyforce!(bond)
     end
 
-    apply_contact_force(state)
 
-    # Calculate final velocity
-    Threads.@threads for node in state.nodes
-        node.velocity = node.velocity*damping + state.dt*0.5 * (node.force / (node.volume * node.material.density))
-    end
-
-end
-
-function dynamic_integration_no_contact(state, damping)
-
-    Threads.@threads for node in state.nodes
-        # Average velocity for the time step assuming constant acceleration
-        node.velocity = node.velocity + (state.dt*0.5)*(node.force/(node.volume*node.material.density))
-    end
-    
-    # Velocity BCs
-    for bc in state.boundaryConditions
-        if bc isa BoundaryConditions.VelocityBC
-            BoundaryConditions.apply_bc(bc)
-        end
-    end
-    
-    Threads.@threads for node in state.nodes
-        # Update displacement with average velocity
-        node.displacement += node.velocity * state.dt
-
-        # Zero out force
-        @atomic node.force = zeros(3)
-    end
-
-    # Displacement BCs
-    for bc in state.boundaryConditions
-        if bc isa BoundaryConditions.DisplacementBC
-            BoundaryConditions.apply_bc(bc)
-        end
-    end
-
-    # Break bonds
-    Threads.@threads for bond in state.bonds
-        if !bond.isBroken && Bonds.should_break(bond)
-            Bonds.break!(bond)
-        end
-    end
-
-    # Apply bond force to nodes
-    Threads.@threads for bond in state.bonds
-        Bonds.apply_force(bond)
+    if contact
+        apply_contact_force(state)
     end
 
     # Calculate final velocity
@@ -275,7 +228,4 @@ function relax(state, kethreshold, maxIterations, minIterations)
             print("\r", count, " : ", kinetic_energy)
         end
     end
-end
-
-
 end
