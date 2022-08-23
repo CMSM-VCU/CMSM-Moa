@@ -1,11 +1,3 @@
-using Materials
-using Nodes
-using Bonds
-using BoundaryConditions
-using AbstractTypes
-using MoaUtil
-using ProximitySearch
-
 using LinearAlgebra: norm
 
 
