@@ -117,7 +117,8 @@ function parse_material(input)
                                         input["critical_strain"],
                                         input["a"],
                                         input["b"],
-                                        Float64(input["a"]) * Float64(input["b"])
+                                        Float64(input["a"]) * Float64(input["b"]),
+                                        []
                                     )
     elseif input["type"] == "CustomPlastic"
         @assert haskey(input, "path")
