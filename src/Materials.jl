@@ -39,7 +39,7 @@ mutable struct TanhElastic <: AMaterial
     emod::Float64
 
     # Strongly Connected To
-    stronglyConnected::Vector{TanhElastic}
+    stronglyConnected::Vector{Int64}
     
 end
 
