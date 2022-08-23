@@ -146,6 +146,7 @@ end
 "Applies the bond's force to its from node (ATOMIC OPERATION, THREAD SAFE)"
 function applyforce!(bond::Bond)
     @atomic bond.from.force += getforce(bond)
+    @atomic bond.to.force -= getforce(bond)
 end
 
 "Returns whether or not a bond should break"
