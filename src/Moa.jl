@@ -28,7 +28,7 @@ end
 
 include("TimeIntegration.jl")
 
-function HelloWorld()
+function HelloWorld()::Bool
     println("Hello from Moa!")
     return true
 end
