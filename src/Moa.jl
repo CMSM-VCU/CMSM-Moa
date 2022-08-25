@@ -30,6 +30,7 @@ include("TimeIntegration.jl")
 
 function HelloWorld()
     println("Hello from Moa!")
+    return true
 end
 
 using TOML
