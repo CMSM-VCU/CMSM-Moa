@@ -100,6 +100,7 @@ function parse_material(input)
     @assert haskey(input, "id")
 
     if input["type"] == "LinearElastic"
+        @assert haskey(input, "bond_constant")
         return Materials.LinearElastic(
                                         input["id"],
                                         input["density"],
