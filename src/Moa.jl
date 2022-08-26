@@ -117,10 +117,18 @@ function parse_input(path::String)
                 n.velocity[3] = Float64(row[:vz])
             end
 
+            # Initial displacements
+            if :ux in input_grid.names
+                n.dispalcement[1] = Float64(row[:ux])
             end
-            push!(nodes, 
-                    n
-                )
+            if :vy in input_grid.names
+                n.dispalcement[2] = Float64(row[:uy])
+            end
+            if :uz in input_grid.names
+                n.dispalcement[3] = Float64(row[:uz])
+            end
+
+            push!(nodes,n)
         end
     end
 
