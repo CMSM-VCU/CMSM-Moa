@@ -98,6 +98,7 @@ function parse_input(path::String)
                 mat.id = row[:material]
                 materials[mat.id] = mat
             end
+
             n ::Nodes.Node = Nodes.Node(
                                         Float64(row[:x]),
                                         Float64(row[:y]),
@@ -105,8 +106,17 @@ function parse_input(path::String)
                                         mat,
                                         gridspacing
                                         )
-            if :vx in input_grid.names && :vx in input_grid.names && :vx in input_grid.names
-                n.velocity = [Float64(row[:vx]), Float64(row[:vy]), Float64(row[:vz])]
+            # Initial velocities
+            if :vx in input_grid.names
+                n.velocity[1] = Float64(row[:vx])
+            end
+            if :vy in input_grid.names
+                n.velocity[2] = Float64(row[:vy])
+            end
+            if :vz in input_grid.names
+                n.velocity[3] = Float64(row[:vz])
+            end
+
             end
             push!(nodes, 
                     n
