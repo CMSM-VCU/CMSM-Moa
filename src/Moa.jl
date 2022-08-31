@@ -1,6 +1,6 @@
 module Moa
 include("AbstractTypes.jl")
-include("Materials.jl")
+include("Materials/Materials.jl")
 include("Nodes.jl")
 include("Bonds.jl")
 include("ProximitySearch.jl")
