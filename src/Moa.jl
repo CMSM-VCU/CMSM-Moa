@@ -29,9 +29,8 @@ end
 
 include("TimeIntegration.jl")
 
-function HelloWorld()::Bool
-    println("Hello from Moa!")
-    return true
+function version()::String
+    return "0.0.0"
 end
 
 using TOML
@@ -40,7 +39,7 @@ using .Nodes
 using PyCall
 
 function parse_input(path::String)
-    println("Parsing input...")
+    @info "Parsing input..."
     input = TOML.parsefile(path)
 
     # Parse global scalars

@@ -1,0 +1,5 @@
+# Grid where the third point is not in the family of the first point if the horizon is 3.015
+x, y, z, material,ux
+0.000, 0, 0, 1,       0
+3.000, 0, 0, 1,       0
+3.016, 0, 0, 1,       0
