@@ -30,28 +30,24 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64, reference=
 
     # Each thread adds to it's own version
     # threaded_data = fill(fill(Vector{Nodes.Node}(),(size1,size2,size3)), Threads.nthreads());
-    data = fill(Vector{Nodes.node}(),(size1,size2,size3))
-    Threads.@threads for idx in eachindex(data)
+    data = Array{Vector{Nodes.Node}}(undef,size1,size2,size3);
+    for i in eachindex(data)
+        data[i] = Vector{Nodes.Node}()
+    end
+
+
+    for node in nodes
         # Insert node
-        for node in state.nodes
-            
-            append(data[idx], node)
-        end
         pos = node.position + node.displacement
-        index = Vector{Int64}(map(x->ceil(x), (pos - dim_min) / radius) + ones(3))
-        push!(threaded_data[Threads.threadid()][index[1], index[2], index[3]], node)
+        # index = []
+        push!(data[Int64(ceil((pos[1] - dim_min[1]) / radius))+1,
+                    Int64(ceil((pos[2] - dim_min[2]) / radius))+1,
+                    Int64(ceil((pos[3] - dim_min[3]) / radius))+1], node)
     end
 
-    # Combine the version from all threads
-    single_data = fill(Vector{Nodes.Node}(),(size1,size2,size3))
-    Threads.@threads for i in eachindex(threaded_data[1])
-        for thread_idx in 1:Threads.nthreads()
-            append!(single_data[i], threaded_data[thread_idx][i])
-        end
-    end
-
+        
     @debug "Created cell list: $(size(threaded_data))"
-    return CellList(single_data, radius, dim_min, dim_max)
+    return CellList(data, radius, dim_min, dim_max)
 end
 
 function sample_cell_list(cell_list::CellList, node::Nodes.Node, radius::Float64)
