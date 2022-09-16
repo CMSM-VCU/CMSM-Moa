@@ -142,7 +142,7 @@ function parse_input(path::String)
     # Create bonds
     @info "Creating bonds..."
     bonds = Vector{AbstractTypes.ABond}()
-    cell_list = ProximitySearch.create_cell_list_reference_configuration(nodes, horizon)
+    cell_list = ProximitySearch.create_cell_list(nodes, horizon, true)
     for node in nodes
         for other in ProximitySearch.sample_cell_list(cell_list, node, horizon)
             neighborhood = collect(Iterators.flatten([(bond.from, bond.to) for bond in node.family]))

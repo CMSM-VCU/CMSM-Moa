@@ -11,100 +11,47 @@ struct CellList
     data_max::Vector{Float64}
 end
 
-function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64)
-    # Can be optimized
-    positions = [node.position + node.displacement for node in nodes]
-    dim_max = copy(positions[1])
-    dim_min = copy(positions[1])
-    for position in positions
-        if position[1] > dim_max[1]
-            dim_max[1] = position[1]
-        end
-        if position[2] > dim_max[2]
-            dim_max[2] = position[2]
-        end
-        if position[3] > dim_max[3]
-            dim_max[3] = position[3]
-        end
-        if position[1] < dim_min[1]
-            dim_min[1] = position[1]
-        end
-        if position[2] < dim_min[2]
-            dim_min[2] = position[2]
-        end
-        if position[3] < dim_min[3]
-            dim_min[3] = position[3]
-        end
-    end
-    shape = (dim_max - dim_min) / radius
-    size1,size2,size3 = Int64(ceil(shape[1]))+1, Int64(ceil(shape[2]))+1,Int64(ceil(shape[3]))+1
-    # println("Creating cell list (", size1, ", ", size2, ", ", size3, ")")
-    data = Array{Vector{Nodes.Node}}(undef,size1,size2,size3);
-    for i in eachindex(data)
-        data[i] = Vector{Nodes.Node}()
-    end
-
-
-    for node in nodes
-        # Insert node
-        pos = node.position + node.displacement
-        # index = []
-        push!(data[Int64(ceil((pos[1] - dim_min[1]) / radius))+1,
-                    Int64(ceil((pos[2] - dim_min[2]) / radius))+1,
-                    Int64(ceil((pos[3] - dim_min[3]) / radius))+1], node)
-    end
-
-        
-    # println("Created cell list: ", size(data))
-    return CellList(data, radius, dim_min, dim_max)
+function find_bounds(positions::Vector{Vector{Float64}})
+    return [minimum([row[i] for row in positions]) for i in 1:3], [maximum([row[i] for row in positions]) for i in 1:3]
 end
 
-function create_cell_list_reference_configuration(nodes::Vector{Nodes.Node}, radius::Float64)
-    # Can be optimized
-    positions = [node.position for node in nodes]
-    dim_max = copy(positions[1])
-    dim_min = copy(positions[1])
-    for position in positions
-        if position[1] > dim_max[1]
-            dim_max[1] = position[1]
-        end
-        if position[2] > dim_max[2]
-            dim_max[2] = position[2]
-        end
-        if position[3] > dim_max[3]
-            dim_max[3] = position[3]
-        end
-        if position[1] < dim_min[1]
-            dim_min[1] = position[1]
-        end
-        if position[2] < dim_min[2]
-            dim_min[2] = position[2]
-        end
-        if position[3] < dim_min[3]
-            dim_min[3] = position[3]
-        end
+
+function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64, reference=false)
+    if reference
+        dim_min, dim_max = find_bounds([Vector{Float64}(node.position) for node in nodes])
+    else
+        dim_min, dim_max = find_bounds([Vector{Float64}(node.position + node.displacement) for node in nodes])
     end
+    
     shape = (dim_max - dim_min) / radius
+
     size1,size2,size3 = Int64(ceil(shape[1]))+1, Int64(ceil(shape[2]))+1,Int64(ceil(shape[3]))+1
-    println("Creating cell list (", size1, ", ", size2, ", ", size3, ")")
-    data = Array{Vector{Nodes.Node}}(undef,size1,size2,size3);
-    for i in eachindex(data)
-        data[i] = Vector{Nodes.Node}()
-    end
+    @debug "Creating cell list ($(size1), $(size2), $(size3))"
 
-
-    for node in nodes
+    # Each thread adds to it's own version
+    # threaded_data = fill(fill(Vector{Nodes.Node}(),(size1,size2,size3)), Threads.nthreads());
+    data = fill(Vector{Nodes.node}(),(size1,size2,size3))
+    Threads.@threads for idx in eachindex(data)
         # Insert node
+        for node in state.nodes
+            
+            append(data[idx], node)
+        end
         pos = node.position + node.displacement
-        # index = []
-        push!(data[Int64(ceil((pos[1] - dim_min[1]) / radius))+1,
-                    Int64(ceil((pos[2] - dim_min[2]) / radius))+1,
-                    Int64(ceil((pos[3] - dim_min[3]) / radius))+1], node)
+        index = Vector{Int64}(map(x->ceil(x), (pos - dim_min) / radius) + ones(3))
+        push!(threaded_data[Threads.threadid()][index[1], index[2], index[3]], node)
     end
 
-        
-    println("Created cell list: ", size(data))
-    return CellList(data, radius, dim_min, dim_max)
+    # Combine the version from all threads
+    single_data = fill(Vector{Nodes.Node}(),(size1,size2,size3))
+    Threads.@threads for i in eachindex(threaded_data[1])
+        for thread_idx in 1:Threads.nthreads()
+            append!(single_data[i], threaded_data[thread_idx][i])
+        end
+    end
+
+    @debug "Created cell list: $(size(threaded_data))"
+    return CellList(single_data, radius, dim_min, dim_max)
 end
 
 function sample_cell_list(cell_list::CellList, node::Nodes.Node, radius::Float64)
