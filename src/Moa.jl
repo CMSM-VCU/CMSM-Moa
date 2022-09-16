@@ -1,4 +1,5 @@
 module Moa
+using Logging
 include("AbstractTypes.jl")
 include("Materials/Materials.jl")
 include("Nodes.jl")
@@ -91,7 +92,7 @@ function parse_input(path::String)
             # Initial material
             mat = defaultMaterial
             material_candidates = [material for (id,material) in materials if material.id == row[:material]]
-            if size(material_candidates)[1] != 0
+            if size(material_candidates)[1] < 1
                 error("Multiple materials with the same material number")
                 mat = first(material_candidates)
             else
@@ -121,13 +122,13 @@ function parse_input(path::String)
 
             # Initial displacements
             if :ux in input_grid.names
-                n.dispalcement[1] = Float64(row[:ux])
+                n.displacement[1] = Float64(row[:ux])
             end
             if :vy in input_grid.names
-                n.dispalcement[2] = Float64(row[:uy])
+                n.displacement[2] = Float64(row[:uy])
             end
             if :uz in input_grid.names
-                n.dispalcement[3] = Float64(row[:uz])
+                n.displacement[3] = Float64(row[:uz])
             end
 
             push!(nodes,n)
@@ -140,7 +141,7 @@ function parse_input(path::String)
     end
 
     # Create bonds
-    println("Creating bonds...")
+    @info "Creating bonds..."
     bonds = Vector{AbstractTypes.ABond}()
     cell_list = ProximitySearch.create_cell_list_reference_configuration(nodes, horizon)
     for node in nodes
@@ -156,7 +157,7 @@ function parse_input(path::String)
         end
     end
     bonds = vcat([node.family for node in nodes]...)
-    println("Created ", length(bonds), " bonds")
+    @info "Created $(length(bonds)) bonds"
 
 
     # Parse BCs
@@ -166,7 +167,7 @@ function parse_input(path::String)
             push!(boundaryConditions, BoundaryConditions.parse_bc(bc, nodes))
         end
     end
-    println("Created ", length(boundaryConditions), " boundary conditions")
+    @info "Created $(length(boundaryConditions)) boundary conditions"
 
     # NoFail regions TEMPORARY FIX!!!
     if haskey(input, "NoFail")
@@ -179,7 +180,7 @@ function parse_input(path::String)
     end
 
     # Disconnects
-    println("# Bonds before disconnect(s): ", length(bonds))
+    @info "# Bonds before disconnect(s): $(length(bonds))"
     if haskey(input, "Disconnect")
         for dc in input["Disconnect"]
             @assert haskey(dc, "ids")
@@ -191,7 +192,7 @@ function parse_input(path::String)
             toRemove = [bond for bond in bonds if bond.from.material.id != bond.to.material.id &&
                                                     bond.from.material.id ∈ ids &&
                                                     bond.to.material.id ∈ ids]
-            println("Disconnecting ", length(toRemove), " bonds")
+            @info "Disconnecting $(length(toRemove)) bonds"
                                                     
             # Remove bonds from families without effecting damage
             for bond in toRemove
@@ -202,7 +203,7 @@ function parse_input(path::String)
             filter!(bond->bond∉toRemove, bonds)
         end
     end
-    println("# Bonds after disconnect(s): ", length(bonds))
+    @info "# Bonds after disconnect(s): $(length(bonds))"
 
     # Force probes
     forceProbes = Vector{AbstractTypes.AForceProbe}()
@@ -211,7 +212,7 @@ function parse_input(path::String)
             push!(forceProbes, ForceProbes.parse_force_probe_plane(forceProbe, bonds))
         end
     end
-    println("Created ", length(forceProbes), " force probes")
+    @info "Created $(length(forceProbes)) force probes"
 
 
     # Contact properties
@@ -225,7 +226,7 @@ function parse_input(path::String)
         contactCoefficient = input["Contact"]["coefficient"]
     end
 
-    println("Finished parsing input!")
+    @info "Finished parsing input!"
     return Moa.state(gridspacing, horizon, dt, nodes, bonds, materials, boundaryConditions, forceProbes, useContact, contactDistance, contactCoefficient)
 end
 
