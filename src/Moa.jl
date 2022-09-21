@@ -226,7 +226,7 @@ function parse_input(path::String)
         contactCoefficient = input["Contact"]["coefficient"]
     end
 
-
+    output_folder = ""
     if haskey(input, "output")
         output_folder = input["output"]["path"]
         if !isdir(output_folder)
