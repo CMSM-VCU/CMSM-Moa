@@ -149,7 +149,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIte
     # Advance tabs
     for bc in state.boundaryConditions
         if bc isa BoundaryConditions.StagedLoadingBC
-            BoundaryConditions.apply_bc(bc)
+            BoundaryConditions.increment_staged_loading(bc)
         end
     end
 

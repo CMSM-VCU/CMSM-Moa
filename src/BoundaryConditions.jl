@@ -38,11 +38,21 @@ function apply_bc(bc::VelocityBC)
 end
 
 function apply_bc(bc::StagedLoadingBC)
+    Threads.@threads for node in bc.nodes
+        node.displacement = bc.currentDisplacement
+        node.velocity = zeros(3)
+        @atomic node.force = zeros(3)
+    end
+end
+
+function increment_staged_loading(bc::StagedLoadingBC)
     bc.currentDisplacement += bc.increment
     Threads.@threads for node in bc.nodes
         node.displacement += bc.increment
     end
 end
+
+
 
 "All nodes within the specified volume
 (should move this function somewhere else and add more options)"
