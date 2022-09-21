@@ -144,7 +144,7 @@ function adr(state, stale::Bool, contact::Bool=false, stabilityconstant::Real=99
     end
 end
 
-function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIterations::Int64)
+function stagedloading(state, velocity_threshold::Float64, maxIterations::Int64, minIterations::Int64, contact::Bool, stabilityconstant::Real)
 
     # Advance tabs
     for bc in state.boundaryConditions
@@ -154,7 +154,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIte
     end
 
     # Relax system
-    TimeIntegration.relax(state, kethreshold, maxIterations, minIterations)
+    relax(state, velocity_threshold, maxIterations, minIterations, contact, stabilityconstant)
 
 
     # Break bonds and relax till no bonds break
@@ -171,7 +171,7 @@ function stagedloading(state, kethreshold::Float64, maxIterations::Int64, minIte
         # println("Have any bonds broken: ", any(anybroken))
 
         # Relax system
-        TimeIntegration.relax(state, kethreshold*10, maxIterations)
+        relax(state, velocity_threshold*10, maxIterations, minIterations, contact, stabilityconstant)
 
 
         # repeat until no bonds break
@@ -205,20 +205,20 @@ function apply_contact_force(state)
     end
 end
 
-function relax(state, kethreshold, maxIterations, minIterations, contact, stabilityconstant)
+function relax(state, velocity_threshold, maxIterations, minIterations, contact, stabilityconstant)
     adr(state, true, contact, stabilityconstant)
     for i in 1:minIterations
         adr(state ,false, contact, stabilityconstant)
     end    
-    kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
+    maxvelocity = MoaUtil.MaxVelocity(state)
 
     count = minIterations
-    while kinetic_energy > kethreshold && count < maxIterations
+    while maxvelocity > velocity_threshold && count < maxIterations
         adr(state, false, contact, stabilityconstant)
-        kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
+        maxvelocity = MoaUtil.MaxVelocity(state)
         count += 1
         if count % 100 == 0
-            print("\r", count, " : ", kinetic_energy)
+            @debug "$(count) : $(maxvelocity)"
         end
     end
 end
