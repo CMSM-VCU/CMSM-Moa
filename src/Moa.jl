@@ -91,9 +91,8 @@ function parse_input(path::String)
             # Initial material
             mat = defaultMaterial
             material_candidates = [material for (id,material) in materials if material.id == row[:material]]
-            if size(material_candidates)[1] < 1
+            if length(material_candidates)[1] > 1
                 error("Multiple materials with the same material number")
-                mat = first(material_candidates)
             else
                 # Create copy of default material with new material number
                 mat = copy(defaultMaterial)
