@@ -42,6 +42,39 @@ end
 
 end;
 
+@testset "Dynamic Integration" begin
+    state = Moa.parse_input("test/twopointdynamic/twopointdynamic.toml")
+    state.dt = 10^-2
+    x = []
+    y = []
+    for i in 1:250
+        Moa.dynamic_integration(state, 1.0, false, false)
+        append!(x,i)
+        append!(y,state.nodes[2].displacement[1])
+    end
+    # plot(x,y)
+    @test isapprox(minimum(y),-0.05, rtol=0.0001) 
+    @test isapprox(maximum(y),0.05, rtol=0.0001) 
+end
+
+@testset "Adaptive Dynamic Relaxation" begin
+    state = Moa.parse_input("test/twopointdynamic/twopointdynamic.toml")
+    x = []
+    y = []
+    append!(x,0)
+    append!(y,state.nodes[2].displacement[1])
+    Moa.adr(state, true, false, 1.2e4)
+    for i in 1:50
+        Moa.adr(state, false, false, 1.2e4)
+        append!(x,i)
+        append!(y,state.nodes[2].displacement[1])
+    end
+    # plot(x,y)
+    @test isapprox(minimum(y), 0.0, atol=10^-5)
+    @test isapprox(y[end], 0.0, atol=10^-5)
+    @test isapprox(maximum(y), 0.05, atol=0.001)
+end
+
 
 
 @testset "Moa.jl" begin
