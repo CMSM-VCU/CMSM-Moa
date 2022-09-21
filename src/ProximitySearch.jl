@@ -46,7 +46,7 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64, reference=
     end
 
         
-    @debug "Created cell list: $(size(threaded_data))"
+    @debug "Created cell list: $(size(data))"
     return CellList(data, radius, dim_min, dim_max)
 end
 
