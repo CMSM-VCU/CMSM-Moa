@@ -10,4 +10,4 @@ horizon=3.015
     bond_constant = 6
 
 [[Grid]]
-    path = "test/neighbortest/threepoint.grid"
+    path = "test/grids/threepoint.grid"

@@ -1,0 +1,4 @@
+# Two points
+x, y, z, material,ux
+0, 0, 0, 1,       0
+1, 0, 0, 1,       0.05

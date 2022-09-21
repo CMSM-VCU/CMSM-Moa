@@ -1,46 +1,9 @@
 module Materials
-
-
 using ..AbstractTypes: AMaterial
 using DelimitedFiles
 
 include("BondBasedLinearElastic.jl")
-
-
-
-mutable struct TanhElastic <: AMaterial
-    id::Int64
-
-    # Not very relevant because it is 
-    density::Float64
-
-    interface_stiffness_coeff::Float64
-
-    # This is taken from MD data
-    critical_strain::Float64
-
-    # These two are parameters that were fit to the md PolyData
-    # stress = a * tanh(b * strain)
-    # Initial stiffness is a * b
-    a::Float64
-    b::Float64
-    emod::Float64
-
-    # Strongly Connected To
-    stronglyConnected::Vector{Int64}
-    
-end
-
-Base.copy(material::TanhElastic) = TanhElastic(material.id,
-    material.density,
-    material.interface_stiffness_coeff,
-    material.critical_strain,
-    material.a,
-    material.b,
-    material.emod,
-    [])
-
-TanhElastic(id::Int64,density::Float64,interface_stiffness_coeff::Float64,critical_strain::Float64,a::Float64,b::Float64,emod::Float64)= TanhElastic(id,density,interface_stiffness_coeff,critical_strain,a,b,emod, [])
+include("BondBasedTanhElastic.jl")
 
 struct CustomPlastic <: AMaterial
     id::Int64
@@ -68,16 +31,14 @@ struct CustomPlastic <: AMaterial
     #         customForceResponse[sortperm(customForceResponse[:,1]), :])
 end
 
-
-
 Base.copy(material::CustomPlastic) = CustomPlastic(
         material.id,
         material.density,
         material.critical_strain,
         material.bond_constant,
         material.emod,
-        material.customForceResponse)
-
+        material.customForceResponse
+)
 
 
 "Creates material from input dictionary"
@@ -98,16 +59,17 @@ function parse_material(input)
                                     )
 
     elseif input["type"] == "TanhElastic"
-        @assert haskey(input, "interface_stiffness_coeff")
+        @assert haskey(input, "interface_stiffness")
+        @assert haskey(input, "interface_critical_stretch")
         return Materials.TanhElastic(
                                         input["id"],
-                                        input["density"],
-                                        input["interface_stiffness_coeff"],
+                                        convert(Float64, input["density"]),
+                                        input["interface_stiffness"],
+                                        input["interface_critical_stretch"],
                                         input["critical_strain"],
                                         input["a"],
                                         input["b"],
-                                        Float64(input["a"]) * Float64(input["b"]),
-                                        []
+                                        Float64(input["a"]) * Float64(input["b"])
                                     )
     elseif input["type"] == "CustomPlastic"
         @assert haskey(input, "path")
@@ -125,8 +87,5 @@ function parse_material(input)
         throw(Exception)
     end
 end
-
-
-
 
 end

@@ -4,6 +4,7 @@ using Revise
 using Moa
 using Test
 using Logging
+using Plots
 println("\n\n\n\n\n")
 
 Logging.disable_logging(LogLevel(0))

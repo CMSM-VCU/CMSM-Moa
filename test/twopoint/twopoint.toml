@@ -7,7 +7,7 @@ horizon=3.015
     id = 1
     density = 1
     critical_strain = 0.1
-    bond_constant = 6
+    bond_constant = 1
 
 [[Grid]]
-    path = "test/twopoint/twopoint.grid"
+    path = "test/grids/twopoint.grid"

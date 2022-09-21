@@ -1,0 +1,20 @@
+gridspacing=1
+horizon=3.015
+
+
+[MaterialDefault]
+    type = "LinearElastic"
+    id = 1
+    density = 1
+    critical_strain = 0.1
+    bond_constant = 3
+
+[[BC]]
+    type = "Displacement"
+    displacement = [0.0, 0.0, 0.0]
+    volume =   [-0.1,0.1,
+                -1.0,1.0,
+                -1.0,1.0]
+
+[[Grid]]
+    path = "test/grids/twopointdynamic.grid"

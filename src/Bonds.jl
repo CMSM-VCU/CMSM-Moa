@@ -84,7 +84,7 @@ function getforce(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
     if bond.from.material.id ∈ bond.to.material.stronglyConnected
         return  direction * (bond.from.material.a*tanh(bond.from.material.b*strain) * bond.to.volume * bond.from.volume)
     else
-        return  direction * (bond.from.material.a*bond.from.material.b*strain * bond.to.volume * bond.from.volume * min(bond.from.material.interface_stiffness_coeff, bond.to.material.interface_stiffness_coeff))
+        return  direction * (bond.from.material.a*bond.from.material.b*strain * bond.to.volume * bond.from.volume * min(bond.from.material.interface_stiffness, bond.to.material.interface_stiffness))
     end
 end
 
