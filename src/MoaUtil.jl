@@ -9,6 +9,14 @@ function KineticEnergy(nodes::Vector{Nodes.Node})
     return sum(KEs)
 end
 
+function MaxVelocity(state)
+    nodeVelocities = zeros(Threads.nthreads())
+    Threads.@threads for node in state.nodes
+        nodeVelocities[Threads.threadid()] = max(nodeVelocities[Threads.threadid()], sum(node.velocity.^2))
+    end
+    return sqrt(maximum(nodeVelocities))
+end
+
 function GetDamageVector(nodes::Vector{Nodes.Node})
     # Create array of zeros
     dmg::Vector{Float64} = fill(0.0, length(nodes))
