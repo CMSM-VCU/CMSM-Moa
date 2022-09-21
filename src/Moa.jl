@@ -25,6 +25,8 @@ mutable struct state
     contact::Bool
     contactDistance::Float64
     contactCoefficient::Float64
+
+    output_folder::String
 end
 
 include("TimeIntegration.jl")
@@ -224,11 +226,20 @@ function parse_input(path::String)
         contactCoefficient = input["Contact"]["coefficient"]
     end
 
+
+    if haskey(input, "output")
+        output_folder = input["output"]["path"]
+        if !isdir(output_folder)
+            mkdir(output_folder)
+        end
+    end
+
+
     @info "Finished parsing input!"
-    return Moa.state(gridspacing, horizon, dt, nodes, bonds, materials, boundaryConditions, forceProbes, useContact, contactDistance, contactCoefficient)
+    return Moa.state(gridspacing, horizon, dt, nodes, bonds, materials, boundaryConditions, forceProbes, useContact, contactDistance, contactCoefficient, output_folder)
 end
 
-function write_output(path::String, state, timestep::Int64)
+function write_output(state, timestep::Int64)
     pd = PyCall.pyimport_conda("pandas", "pandas")
 
     # Node data
@@ -250,7 +261,7 @@ function write_output(path::String, state, timestep::Int64)
                 ) for node in state.nodes],
             columns = ["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "dmg", "dmgi", "dmgm", "mat"]
     )
-    df.to_hdf(path, "t"*lpad(timestep, 7, "0"), mode="a")
+    df.to_hdf(state.output_folder*"/output.h5", "t"*lpad(timestep, 7, "0"), mode="a")
 
 
     # for bc in state.boundaryConditions
