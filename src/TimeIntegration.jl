@@ -56,8 +56,8 @@ function dynamic_integration(state, damping::Float64, contact::Bool, failure::Bo
 
 end
 
-function adr(state, stale::Bool)
-    dt = 1.0
+function adr(state, stale::Bool, contact::Bool=false, stabilityconstant::Real=999.0)
+    dt = stabilityconstant
 
     # Zero force
     Threads.@threads for node in state.nodes
@@ -69,7 +69,8 @@ function adr(state, stale::Bool)
         Bonds.applyforce!(bond)
     end
 
-    apply_contact_force(state)
+    
+    contact && apply_contact_force(state)
 
 
     # Calculates factor
@@ -204,16 +205,16 @@ function apply_contact_force(state)
     end
 end
 
-function relax(state, kethreshold, maxIterations, minIterations)
-    adr(state, true)
+function relax(state, kethreshold, maxIterations, minIterations, contact, stabilityconstant)
+    adr(state, true, contact, stabilityconstant)
     for i in 1:minIterations
-        adr(state ,false)
+        adr(state ,false, contact, stabilityconstant)
     end    
     kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
 
-    count = 1
+    count = minIterations
     while kinetic_energy > kethreshold && count < maxIterations
-        adr(state, false)
+        adr(state, false, contact, stabilityconstant)
         kinetic_energy = MoaUtil.KineticEnergy(state.nodes)
         count += 1
         if count % 100 == 0
