@@ -154,6 +154,16 @@ function shouldbreak(bond::Bond)
     return (bond.from.allowFailure && bond.to.allowFailure) && getstrain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
 end
 
+
+"Returns whether or not a bond should break"
+function shouldbreak(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
+    if bond.from.material.id ∈ bond.to.material.stronglyConnected
+        return (bond.from.allowFailure && bond.to.allowFailure) && getstrain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
+    else
+        return (bond.from.allowFailure && bond.to.allowFailure) && getstrain(bond) > min(bond.from.material.interface_critical_stretch, bond.to.material.interface_critical_stretch)
+    end
+end
+
 "Breaks the bond"
 function break!(bond::Bond)
     # bond.isBroken && println("WARNING! BREAKING BOND THAT IS ALREADY BROKEN!")
