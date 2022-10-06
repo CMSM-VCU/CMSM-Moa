@@ -77,14 +77,24 @@ function getforce(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
     if strain > 0.0 && bond.isBroken
         return zeros(3)
     end
-
     direction::SVector{3,Float64} = deformed_bond_vector ./ deformed_bond_length
 
-    # NON-GENERALIZED IMPLEMENTATION: CHECKS IF IT IS IN THE 
+    # NON-GENERALIZED IMPLEMENTATION: CHECKS IF IT IS IN THE STRONGLY CONNECTED LIST
     if bond.from.material.id ∈ bond.to.material.stronglyConnected
-        return  direction * (bond.from.material.a*tanh(bond.from.material.b*strain) * bond.to.volume * bond.from.volume)
+        return  direction *
+        (
+            bond.from.material.a*tanh(bond.from.material.b * strain) *
+            bond.to.volume *
+            bond.from.volume
+        )
     else
-        return  direction * (bond.from.material.a*bond.from.material.b*strain * bond.to.volume * bond.from.volume * min(bond.from.material.interface_stiffness, bond.to.material.interface_stiffness))
+        return  direction * 
+        (
+            min(bond.from.material.a*bond.from.material.b*strain,bond.to.material.a*bond.to.material.b) *
+            bond.to.volume *
+            bond.from.volume *
+            min(bond.from.material.interface_stiffness, bond.to.material.interface_stiffness)
+        )
     end
 end
 
@@ -151,16 +161,22 @@ end
 
 "Returns whether or not a bond should break"
 function shouldbreak(bond::Bond)
-    return (bond.from.allowFailure && bond.to.allowFailure) && getstrain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
+    return bond.from.allowFailure &&
+            bond.to.allowFailure &&
+            getstrain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
 end
 
 
 "Returns whether or not a bond should break"
 function shouldbreak(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
     if bond.from.material.id ∈ bond.to.material.stronglyConnected
-        return (bond.from.allowFailure && bond.to.allowFailure) && getstrain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
+        return bond.from.allowFailure &&
+                bond.to.allowFailure &&
+                getstrain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
     else
-        return (bond.from.allowFailure && bond.to.allowFailure) && getstrain(bond) > min(bond.from.material.interface_critical_stretch, bond.to.material.interface_critical_stretch)
+        return bond.from.allowFailure &&
+                bond.to.allowFailure &&
+                getstrain(bond) > min(bond.from.material.interface_critical_stretch, bond.to.material.interface_critical_stretch)
     end
 end
 
