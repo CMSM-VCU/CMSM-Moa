@@ -89,12 +89,13 @@ function parse_input(path::String)
         @assert :material in input_grid.names
 
         for row in input_grid
-
             # Initial material
             mat = defaultMaterial
             material_candidates = [material for (id,material) in materials if material.id == row[:material]]
             if length(material_candidates)[1] > 1
                 error("Multiple materials with the same material number")
+            elseif length(material_candidates) == 1
+                mat = material_candidates[1]
             else
                 # Create copy of default material with new material number
                 mat = copy(defaultMaterial)
