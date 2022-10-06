@@ -64,7 +64,7 @@ function parse_material(input)
         return Materials.TanhElastic(
                                         input["id"],
                                         convert(Float64, input["density"]),
-                                        input["interface_stiffness"],
+                                        convert(Float64,input["interface_stiffness"]),
                                         input["interface_critical_stretch"],
                                         input["critical_strain"],
                                         input["a"],
