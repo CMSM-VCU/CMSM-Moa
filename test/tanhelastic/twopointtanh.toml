@@ -1,0 +1,17 @@
+gridspacing = 1.0
+horizon = 3.015
+
+[MaterialDefault]
+    type = "TanhElastic"
+    id = 1
+    density = 1
+    a = 1.0
+    b = 25.0
+    critical_strain = 0.1
+
+    # Interface not used in this test
+    interface_stiffness = 1
+    interface_critical_stretch = 0.1
+
+[[Grid]]
+    path = "test/grids/twopoint.grid"

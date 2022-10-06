@@ -1,2 +1,44 @@
 gridspacing = 1.0
 horizon = 3.015
+
+[MaterialDefault]
+    type = "TanhElastic"
+    id = 1
+    density = 1
+    interface_stiffness = 1
+    interface_critical_stretch = 0.1
+    critical_strain = 0.20000001
+    a = 1.0
+    b = 15.0
+
+[[Grid]]
+    path = "test/grids/chain.grid"
+
+# First Tab
+[[BC]]
+    type = "Staged Loading"
+    increment = [-0.01, 0.0, 0.0]
+    volume =   [-8.1,-5.9,
+                -9999.0,9999.0,
+                -9999.0,9999.0,]
+[[NoFail]]
+    volume =   [-8.1,-5.9,
+                -9999.0,9999.0,
+                -9999.0,9999.0,]
+# Second Tab
+[[BC]]
+    type = "Staged Loading"
+    increment = [0.01, 0.0, 0.0]
+    volume =   [5.9, 8.1,
+                -9999.0,9999.0,
+                -9999.0,9999.0,]
+[[NoFail]]
+    volume =   [5.9, 8.1,
+                -9999.0,9999.0,
+                -9999.0,9999.0,]
+
+
+[[ForceProbe]]
+    type = "Plane"
+    pointOnPlane = [0.001, 0.0, 0.0]
+    normal = [1.0, 0.0, 0.0]
