@@ -88,6 +88,7 @@ function getforce(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
             bond.from.volume
         )
     else
+        bond.isBroken && return zeros(3)
         return  direction * 
         (
             min(bond.from.material.a*bond.from.material.b*strain,bond.to.material.a*bond.to.material.b) *

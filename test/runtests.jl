@@ -122,6 +122,38 @@ end;
     # plot(strains, forces, legend=false, markershape=:circle)
     # println(Moa.ForceProbes.measure_force(state.forceProbes[1]))
 end;
+##
+@testset "Break Compressed Interface Bonds" begin
+    forces = []
+    displacements = []
+    strains = []
+    state = Moa.parse_input("test/tanhelastic/twopointtanh.toml")
+
+    push!(forces, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+    push!(displacements, 0)
+    push!(strains, 0)
+    
+    for x in 0:0.01:3*π
+        state.nodes[2].displacement[1] = 0.9*sin(x)
+        Threads.@threads for bond in state.bonds
+            if Moa.Bonds.getstrain(bond) < 0 && bond.from.material.id ∉ bond.to.material.stronglyConnected
+                Moa.Bonds.break!(bond)
+            end
+        end
+
+        push!(displacements, 0.9*sin(x))
+        push!(forces, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+        push!(strains, Moa.Bonds.getstrain(state.bonds[1]))
+        if any(map(x->x<0, strains))
+            @test forces[end] ≈ 0.0
+        end
+    end
+    # plot(forces*0.1, label="Force")
+    # plot!(displacements, label="Displacement")
+    # plot(displacements, legend=false)
+    # plot(strains)
+    # plotDisplacement(state, 1.0, 1)
+end;
 
 @testset "Contact" begin
     state = Moa.parse_input("test/twopoint/twopointcontact.toml");

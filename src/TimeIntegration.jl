@@ -156,7 +156,7 @@ function stagedloading(state, velocity_threshold::Float64, maxIterations::Int64,
     # Relax system
     relax(state, velocity_threshold, maxIterations, minIterations, contact, stabilityconstant)
 
-
+    count = 0
     # Break bonds and relax till no bonds break
     while true
         # Break bonds
@@ -168,12 +168,25 @@ function stagedloading(state, velocity_threshold::Float64, maxIterations::Int64,
             end
         end
 
+        # Break compressive interface bonds
+        Threads.@threads for node in state.nodes
+            for bond in node.family
+                if Bonds.getstrain(bond) < 0 && bond.from.material.id ∉ bond.to.material.stronglyConnected
+                    Bonds.delete(bond)
+                    anybroken[Threads.threadid()] = true
+                end
+            end
+        end
+
         # println("Have any bonds broken: ", any(anybroken))
 
         # Relax system
         relax(state, velocity_threshold*10, maxIterations, minIterations, contact, stabilityconstant)
 
-
+        count += 1
+        if any(anybroken)
+            @debug "Bonds broken, relaxing again $(count)"
+        end
         # repeat until no bonds break
         any(anybroken) || break
     end
@@ -218,8 +231,8 @@ function relax(state, velocity_threshold, maxIterations, minIterations, contact,
         adr(state, false, contact, stabilityconstant)
         maxvelocity = MoaUtil.MaxVelocity(state)
         count += 1
-        if count % 100 == 0
-            @debug "$(count) : $(maxvelocity)"
+        if count % 1000 == 0
+            @debug "Relaxing $(round(count/maxIterations * 100,digits=4))%, $(round(velocity_threshold/maxvelocity * 100, digits=6))%"
         end
     end
 end
