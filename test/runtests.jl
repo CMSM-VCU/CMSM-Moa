@@ -123,6 +123,15 @@ end;
     # println(Moa.ForceProbes.measure_force(state.forceProbes[1]))
 end;
 
+@testset "Contact" begin
+    state = Moa.parse_input("test/twopoint/twopointcontact.toml");
+    state.nodes[2].displacement[1] = -0.1
+    Moa.apply_contact_force(state)
+    @test state.nodes[1].force[1] ≈ 0.5
+    @test state.nodes[2].force[1] ≈ -0.5
+end;
+
+
 @testset "Moa.jl" begin
     state = Moa.parse_input("test/twopoint/twopoint.toml")
     @test state ≠ Nothing
