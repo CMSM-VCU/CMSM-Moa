@@ -28,11 +28,11 @@ function plotDamage(state, exaggeration::Float64)
 end
 
 function plotInterfaceDamage(state, exaggeration::Float64)
-    MoaPlot(state, exaggeration, [Float64(Moa.state.nodes.interfaceDamage(node)) for node in state.nodes])
+    MoaPlot(state, exaggeration, [Float64(Moa.Nodes.interfaceDamage(node)) for node in state.nodes])
 end
 
 function plotMaterialDamage(state, exaggeration::Float64)
-    MoaPlot(state, exaggeration, [Float64(Moa.state.nodes.materialDamage(node)) for node in state.nodes])
+    MoaPlot(state, exaggeration, [Float64(Moa.Nodes.materialDamage(node)) for node in state.nodes])
 end
 
 function plotDisplacement(state, exaggeration::Float64, axis::Int64)
