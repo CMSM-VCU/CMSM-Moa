@@ -129,6 +129,14 @@ end;
     Moa.apply_contact_force(state)
     @test state.nodes[1].force[1] ≈ 0.5
     @test state.nodes[2].force[1] ≈ -0.5
+
+    # Reset forces
+    [@atomic node.force = zeros(3) for node in state.nodes]
+    state.nodes[2].displacement[1] = 0.1
+    Moa.apply_contact_force(state)
+    @test state.nodes[1].force[1] ≈ 0.0
+    @test state.nodes[2].force[1] ≈ 0.0
+
 end;
 
 
