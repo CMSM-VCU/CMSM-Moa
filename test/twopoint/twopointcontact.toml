@@ -1,0 +1,17 @@
+gridspacing=1
+horizon=0.985
+
+
+[MaterialDefault]
+    type = "LinearElastic"
+    id = 1
+    density = 1
+    critical_strain = 0.1
+    bond_constant = 1
+
+[[Grid]]
+    path = "test/grids/twopoint.grid"
+
+[Contact]
+    distance = 1.0
+    coefficient = 5.0

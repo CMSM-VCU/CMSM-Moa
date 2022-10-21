@@ -121,11 +121,13 @@ function interfaceDamage(node::Node)
     return damage
 end
 
-"Distance between two nodes"
-function distance(a::Node, b::Node)
-    return norm((a.position[1] - b.position[1])^2 +
-                (a.position[2] - b.position[2])^2 +
-                (a.position[3] - b.position[3])^2)
+function reference_distance(a::Node, b::Node)
+    return norm(b.position - a.position)
 end
+
+function deformed_distance(a::Node, b::Node)
+    return norm((b.position + b.displacement) .- (a.position + a.displacement))
+end
+
 
 end

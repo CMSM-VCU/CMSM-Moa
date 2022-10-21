@@ -182,7 +182,7 @@ end
 
 function apply_contact_force(state)
     if state.contact
-        cell_list = ProximitySearch.create_cell_list(state.nodes, state.contactDistance)
+        cell_list = ProximitySearch.create_cell_list(state.nodes, state.contactDistance, false)
         Threads.@threads for node in state.nodes
             for other in ProximitySearch.sample_cell_list(cell_list, node, state.contactDistance)
                 # Dont add force if the node is a familiy member
@@ -197,8 +197,9 @@ function apply_contact_force(state)
                     continue
                 end
                 
-                distance::Float64 = Nodes.distance(node, other)
-                direction::Vector{Float64} = (other.position - node.position) / norm(other.position - node.position)
+                distance::Float64 = Nodes.deformed_distance(node, other)
+                direction::Vector{Float64} = (other.position + other.displacement - node.position - node.displacement) / Nodes.deformed_distance(node, other)
+                # Contact force calculation
                 @atomic node.force += (state.contactCoefficient * ((state.contactDistance - distance) / state.contactDistance) * node.volume * other.volume) * direction
             end
         end

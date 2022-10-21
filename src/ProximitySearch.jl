@@ -38,7 +38,10 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64, reference=
 
     for node in nodes
         # Insert node
-        pos = node.position + node.displacement
+        pos = node.position
+        if !reference
+            pos += node.displacement
+        end
         # index = []
         push!(data[Int64(ceil((pos[1] - dim_min[1]) / radius))+1,
                     Int64(ceil((pos[2] - dim_min[2]) / radius))+1,
