@@ -75,19 +75,13 @@ end
     @test isapprox(maximum(y), 0.05, atol=0.001)
 end
 
-
-
 @testset "NodeMaterialReference" begin
     # Nodes should referernce a material in state.materials instead of having their own copy
     state = Moa.parse_input("test/twopoint/twopoint.toml")
     @test state.nodes[1].material ∈ values(state.materials)
 end;
 
-
-
 @testset "CNT" begin
-# begin
-    include("../src/Visualize.jl")
     state = Moa.parse_input("test/tanhelastic/tanhelastic.toml")
 
     push!(state.materials[1].stronglyConnected, 1)
@@ -116,12 +110,53 @@ end;
         else
             @test forces[end] ≈ 0.0
         end
-        push!(strains, i / 1000)
+        push!(strains, strain)
     end
     
-    # plot(strains, forces, legend=false, markershape=:circle)
     # println(Moa.ForceProbes.measure_force(state.forceProbes[1]))
 end;
+plot(strains, forces, legend=false, markershape=:circle)
+plot(forces)
+
+##
+state = Moa.parse_input("test/tanhelastic/twopointinterfacetest.toml");
+# Connect materials to themselves
+for (id, mat) in state.materials
+    append!(mat.stronglyConnected, id)
+end
+tensile = []
+shear = []
+append!(tensile, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+append!(shear, Moa.ForceProbes.measure_force(state.forceProbes[2]))
+
+for ts in 1:2500
+    for bc in state.boundaryConditions
+        if bc isa Moa.BoundaryConditions.StagedLoadingBC
+            Moa.BoundaryConditions.increment_staged_loading(bc)
+        end
+    end
+
+    Threads.@threads for bond in state.bonds
+        if !bond.isBroken && Moa.Bonds.shouldbreak(bond)
+            Moa.Bonds.break!(bond)
+        end
+    end
+
+    Threads.@threads for bond in state.bonds
+        # If interface bond
+        if Moa.Bonds.getstrain(bond) < 0 && bond.from.material.id ∉ bond.to.material.stronglyConnected
+            Moa.Bonds.break!(bond)
+        end
+    end
+
+    append!(tensile, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+    append!(shear, Moa.ForceProbes.measure_force(state.forceProbes[2]))
+end
+plot(tensile)
+plot!(shear, legend=false)
+plot(tensile[1:300])
+plot!(shear[1:300], legend=false)
+
 ##
 @testset "Break Compressed Interface Bonds" begin
     forces = []
@@ -172,5 +207,4 @@ end;
 
     # Bond connection (should change to 1 bond in the future)
     @test length(state.bonds) == 2
-end
-;
+end;
