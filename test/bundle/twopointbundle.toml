@@ -1,0 +1,28 @@
+gridspacing = 1.0
+horizon = 3.015
+
+[MaterialDefault]
+    type = "Bundle"
+    id = 1
+    density = 1
+    a = 1422.912142068498
+    b = 20.059494696928038
+    c = -850.4321474780925
+    d = 109.70122782086993
+    e = -650.3834813164519
+    e_soften = 0.038885466353955414
+    critical_strain = 0.15932329681588994
+
+
+    # Interface not used in this test
+    interface_stiffness = 1
+    interface_critical_stretch = 0.1
+
+[[Grid]]
+    path = "test/grids/twopoint.grid"
+
+
+[[ForceProbe]]
+    type = "Plane"
+    pointOnPlane = [0.001, 0.0, 0.0]
+    normal = [1.0, 0.0, 0.0]

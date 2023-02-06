@@ -4,6 +4,7 @@ using DelimitedFiles
 
 include("BondBasedLinearElastic.jl")
 include("BondBasedTanhElastic.jl")
+include("BondBasedBundle.jl")
 
 struct CustomPlastic <: AMaterial
     id::Int64
@@ -80,7 +81,32 @@ function parse_material(input)
 
         # Parse path
         # Create struct
-        
+    elseif input["type"] == "Bundle"
+        @assert haskey(input, "interface_stiffness")
+        @assert haskey(input, "interface_critical_stretch")
+        @assert haskey(input, "a")
+        @assert haskey(input, "b")
+        @assert haskey(input, "c")
+        @assert haskey(input, "d")
+        @assert haskey(input, "e")
+        @assert haskey(input, "e_soften")
+        return Materials.Bundle(
+            input["id"],
+            convert(Float64, input["density"]),
+            convert(Float64,input["interface_stiffness"]),
+            convert(Float64, input["interface_critical_stretch"]),
+            convert(Float64, input["critical_strain"]),
+            convert(Float64, input["a"]),
+            convert(Float64, input["b"]),
+            convert(Float64, input["c"]),
+            convert(Float64, input["d"]),
+            convert(Float64, input["e"]),
+            convert(Float64, input["e_soften"]),
+            Float64(input["a"]) * Float64(input["b"]),
+            []
+        )
+
+
     else
         # Material type not known
         println("Unknown type from material: ", input["id"])

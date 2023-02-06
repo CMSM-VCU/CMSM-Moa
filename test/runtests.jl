@@ -9,6 +9,58 @@ Logging.disable_logging(LogLevel(Logging.Info))
 # Logging.disable_logging(LogLevel(Logging.Debug))
 
 
+
+@testset "BundleForceResponse" begin
+    state = Moa.parse_input("test/bundle/twopointbundle.toml");
+    push!(state.materials[1].stronglyConnected, 1)
+
+    forces = []
+    strains = []
+    bondstrains = []
+
+    push!(forces, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+    push!(strains, 0.0)
+
+    for i in 1:20
+        m_strain = i / 20 * 0.2
+        for j in 1:1000
+            strain = j/ 1000 * m_strain
+            for node in state.nodes
+                node.displacement[1] = node.position[1] * strain
+            end
+            for bond in state.bonds
+                if !bond.isBroken && Moa.Bonds.shouldbreak(bond)
+                    Moa.Bonds.break!(bond)
+                end
+            end
+            push!(forces, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+            push!(strains, strain)
+            
+        end
+        for j in 1:1000
+            strain = (1000-j)/ 1000 * m_strain
+            for node in state.nodes
+                node.displacement[1] = node.position[1] * strain
+            end
+            for bond in state.bonds
+                if !bond.isBroken && Moa.Bonds.shouldbreak(bond)
+                    Moa.Bonds.break!(bond)
+                end
+            end
+            push!(forces, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+            push!(strains, strain)
+        end
+    end
+
+    @test isapprox(maximum(forces), 1422.912142068498 * tanh(20.059494696928038 * 0.038885466353955414) / 6, atol=0.5)
+    # Bring these outside the testset
+    plot(strains, forces, legend=false, markershape=:circle)
+end
+##
+
+
+
+
 @testset "Connectivity" begin
     # Is the test set connected to Moa?
     @test typeof(Moa.version()) <: String
@@ -115,47 +167,47 @@ end;
     
     # println(Moa.ForceProbes.measure_force(state.forceProbes[1]))
 end;
-plot(strains, forces, legend=false, markershape=:circle)
-plot(forces)
+# plot(strains, forces, legend=false, markershape=:circle)
+# plot(forces)
 
 ##
-state = Moa.parse_input("test/tanhelastic/twopointinterfacetest.toml");
-# Connect materials to themselves
-for (id, mat) in state.materials
-    append!(mat.stronglyConnected, id)
-end
-tensile = []
-shear = []
-append!(tensile, Moa.ForceProbes.measure_force(state.forceProbes[1]))
-append!(shear, Moa.ForceProbes.measure_force(state.forceProbes[2]))
+# state = Moa.parse_input("test/tanhelastic/twopointinterfacetest.toml");
+# # Connect materials to themselves
+# for (id, mat) in state.materials
+#     append!(mat.stronglyConnected, id)
+# end
+# tensile = []
+# shear = []
+# append!(tensile, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+# append!(shear, Moa.ForceProbes.measure_force(state.forceProbes[2]))
 
-for ts in 1:2500
-    for bc in state.boundaryConditions
-        if bc isa Moa.BoundaryConditions.StagedLoadingBC
-            Moa.BoundaryConditions.increment_staged_loading(bc)
-        end
-    end
+# for ts in 1:2500
+#     for bc in state.boundaryConditions
+#         if bc isa Moa.BoundaryConditions.StagedLoadingBC
+#             Moa.BoundaryConditions.increment_staged_loading(bc)
+#         end
+#     end
 
-    Threads.@threads for bond in state.bonds
-        if !bond.isBroken && Moa.Bonds.shouldbreak(bond)
-            Moa.Bonds.break!(bond)
-        end
-    end
+#     Threads.@threads for bond in state.bonds
+#         if !bond.isBroken && Moa.Bonds.shouldbreak(bond)
+#             Moa.Bonds.break!(bond)
+#         end
+#     end
 
-    Threads.@threads for bond in state.bonds
-        # If interface bond
-        if Moa.Bonds.getstrain(bond) < 0 && bond.from.material.id ∉ bond.to.material.stronglyConnected
-            Moa.Bonds.break!(bond)
-        end
-    end
+#     Threads.@threads for bond in state.bonds
+#         # If interface bond
+#         if Moa.Bonds.getstrain(bond) < 0 && bond.from.material.id ∉ bond.to.material.stronglyConnected
+#             Moa.Bonds.break!(bond)
+#         end
+#     end
 
-    append!(tensile, Moa.ForceProbes.measure_force(state.forceProbes[1]))
-    append!(shear, Moa.ForceProbes.measure_force(state.forceProbes[2]))
-end
-plot(tensile)
-plot!(shear, legend=false)
-plot(tensile[1:300])
-plot!(shear[1:300], legend=false)
+#     append!(tensile, Moa.ForceProbes.measure_force(state.forceProbes[1]))
+#     append!(shear, Moa.ForceProbes.measure_force(state.forceProbes[2]))
+# end
+# plot(tensile)
+# plot!(shear, legend=false)
+# plot(tensile[1:300])
+# plot!(shear[1:300], legend=false)
 
 ##
 @testset "Break Compressed Interface Bonds" begin
@@ -208,3 +260,4 @@ end;
     # Bond connection (should change to 1 bond in the future)
     @test length(state.bonds) == 2
 end;
+

@@ -58,7 +58,7 @@ end
 
 "Stable mass calculation for Adaptive Dynamic Relaxation"
 function stableMass(node::Node, dt, horizon, gridspacing)
-    if node.material isa Materials.TanhElastic
+    if node.material isa Materials.TanhElastic || node.material isa Materials.Bundle
         return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.a * node.material.b / gridspacing
     end
     return 0.25 * dt^2 * 4.0/3.0 * pi * horizon^3 * node.material.bond_constant / gridspacing
@@ -86,7 +86,7 @@ end
 "Ratio of broken bonds between materials with the same id to total bonds between 
 materials with the same id"
 function materialDamage(node::Node)
-    bonds_relevant = [bond for bond in node.family if bond.from.material.id == bond.to.material.id]
+    bonds_relevant = [bond for bond in node.family if bond.from.material.id ∈ bond.to.material.stronglyConnected]
     numbonds::Int64 = length(bonds_relevant)
     numbrokenbonds::Int64 = 0
 
@@ -101,6 +101,40 @@ function materialDamage(node::Node)
     numbonds == 0 ? damage = 0 : damage = numbrokenbonds / numbonds
     return damage
 end
+
+"Ratio of broken bonds between materials with the same id to total bonds between 
+materials with the same id"
+function materialDamage(node::Node{Materials.Bundle})
+    bonds_relevant = [bond for bond in node.family if bond.from.material.id ∈ bond.to.material.stronglyConnected]
+    numbonds::Int64 = length(bonds_relevant)
+    damageACC::Float64 = 0
+
+    # Count number of broken bonds
+    for bond in bonds_relevant
+        if bond.isBroken
+            damageACC += 1.0
+        else
+            if bond.max_strain > node.material.e_soften
+                # Max force / Force at max strain
+                a = bond.from.material.a
+                b = bond.from.material.b
+                c = bond.from.material.c
+                d = bond.from.material.d
+                e = bond.from.material.e
+                e_soften = bond.from.material.e_soften
+                damageACC += 
+                    a*tanh(b*e_soften) /
+                    ((a*tanh(b * e_soften) + c*tanh(d*(bond.max_strain - e_soften)) - e * (e_soften - bond.max_strain)) * 0.1666666666666666666666)
+            end
+        end
+
+    end
+
+    damage::Float64 = 0
+    numbonds == 0 ? damage = 0 : damage = damageACC / numbonds
+    return damage
+end
+
 
 "Ratio of broken bonds between materials with different ids to total bonds between 
 materials with different ids"

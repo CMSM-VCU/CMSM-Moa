@@ -11,8 +11,9 @@ mutable struct Bond{M, N} <: ABond
     to::Nodes.Node{N}
     bondConstant::Float64
     isBroken::Bool
+    max_strain::Float64
 end
-Bond(from::Nodes.Node{<:AMaterial}, to::Nodes.Node{<:AMaterial}) = Bond(from, to, bondconstant(to, from), false)
+Bond(from::Nodes.Node{<:AMaterial}, to::Nodes.Node{<:AMaterial}) = Bond(from, to, bondconstant(to, from), false, 0.0)
 
 "This is the number strain gets multiplied by to get force"
 function bondconstant(to::Node{Materials.LinearElastic}, from::Node{Materials.LinearElastic})
@@ -21,6 +22,11 @@ end
 
 "This isn't used by the getforce function, but it is the initial slope of the force response"
 function bondconstant(to::Node{Materials.TanhElastic}, from::Node{Materials.TanhElastic})
+    return min(to.material.a * to.material.b, from.material.a * from.material.b) * to.volume * from.volume
+end
+
+"This isn't used by the getforce function, but it is the initial slope of the force response"
+function bondconstant(to::Node{Materials.Bundle}, from::Node{Materials.Bundle})
     return min(to.material.a * to.material.b, from.material.a * from.material.b) * to.volume * from.volume
 end
 
@@ -99,6 +105,68 @@ function getforce(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
     end
 end
 
+
+"The force enacted by the bond's to node onto the bond's from node for a bond between 
+two TanhElastic Nodes"
+function getforce(bond::Bond{Materials.Bundle, Materials.Bundle})
+    # Duplicated code here from get_strain because it uses intermediate calculations
+    initial_bond_length::Float64 = norm(bond.to.position - bond.from.position)
+    deformed_bond_vector::SVector{3, Float64} = bond.to.position + bond.to.displacement - bond.from.position - bond.from.displacement
+    deformed_bond_length::Float64 = norm(deformed_bond_vector)
+    strain::Float64 = (deformed_bond_length - initial_bond_length) / initial_bond_length
+    if strain > bond.max_strain
+        bond.max_strain = strain
+    end
+    if strain > 0.0 && bond.isBroken
+        return zeros(3)
+    end
+    direction::SVector{3,Float64} = deformed_bond_vector ./ deformed_bond_length
+
+    
+    if bond.from.material.id ∈ bond.to.material.stronglyConnected        # If not an interface bond...
+        a = bond.from.material.a
+        b = bond.from.material.b
+        c = bond.from.material.c
+        d = bond.from.material.d
+        e = bond.from.material.e
+        e_soften = bond.from.material.e_soften
+        if bond.max_strain > bond.from.material.e_soften && strain < bond.max_strain        # If the bond is beyond the softening strain but less than the max strain...
+            # Lineary interpolate down
+            magnitude =  max(0,
+                (((a*tanh(b * e_soften) + c*tanh(d*(bond.max_strain - e_soften)) - e * (e_soften - strain)) * 0.1666666666666666666666) +
+                ((strain - bond.max_strain) * a * b)) * bond.from.volume * bond.to.volume)
+            return direction * magnitude
+
+        end
+        if strain > bond.from.material.e_soften         # If the bond is softened, but at it's peak strain
+            return  direction *
+            (
+                (a*tanh(b * e_soften) + c*tanh(d*(strain - e_soften)) - e * (e_soften - strain)) *
+                0.1666666666666666666666 *
+                bond.to.volume *
+                bond.from.volume
+            )
+        else        # If the bond hasn't softened (Elastic, follows tanh function)
+            return  direction *
+            (
+                bond.from.material.a*tanh(bond.from.material.b * strain) *
+                bond.to.volume *
+                bond.from.volume * 0.1666666666666666666666
+            )
+        end
+    else
+        bond.isBroken && return zeros(3)
+        return  direction * 
+        (
+            min(bond.from.material.a*bond.from.material.b*strain, bond.to.material.a*bond.to.material.b) *
+            bond.to.volume *
+            bond.from.volume *
+            min(bond.from.material.interface_stiffness, bond.to.material.interface_stiffness)
+        )
+    end
+end
+
+
 function custombondconstant(strain::Float64, material::Materials.CustomPlastic)
     for i in 1:size(material.customForceResponse)[1]-1
         if strain < material.customForceResponse[i+1, 1]
@@ -170,6 +238,19 @@ end
 
 "Returns whether or not a bond should break"
 function shouldbreak(bond::Bond{Materials.TanhElastic, Materials.TanhElastic})
+    if bond.from.material.id ∈ bond.to.material.stronglyConnected
+        return bond.from.allowFailure &&
+                bond.to.allowFailure &&
+                getstrain(bond) > min(bond.from.material.critical_strain, bond.to.material.critical_strain)
+    else
+        return bond.from.allowFailure &&
+                bond.to.allowFailure &&
+                getstrain(bond) > min(bond.from.material.interface_critical_stretch, bond.to.material.interface_critical_stretch)
+    end
+end
+
+"Returns whether or not a bond should break"
+function shouldbreak(bond::Bond{Materials.Bundle, Materials.Bundle})
     if bond.from.material.id ∈ bond.to.material.stronglyConnected
         return bond.from.allowFailure &&
                 bond.to.allowFailure &&
