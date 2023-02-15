@@ -28,7 +28,8 @@ mutable struct Bundle <: AMaterial
     
 end
 
-Base.copy(material::Bundle) = Bundle(material.id,
+Base.copy(material::Bundle) = Bundle(
+    material.id,
     material.density,
     material.interface_stiffness,
     material.interface_critical_stretch,
