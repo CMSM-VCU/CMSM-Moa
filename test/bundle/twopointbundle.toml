@@ -12,6 +12,7 @@ horizon = 3.015
     e = -650.3834813164519
     e_soften = 0.038885466353955414
     critical_strain = 0.15932329681588994
+    mass = 1.0
 
 
     # Interface not used in this test

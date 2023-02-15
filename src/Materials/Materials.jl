@@ -90,6 +90,7 @@ function parse_material(input)
         @assert haskey(input, "d")
         @assert haskey(input, "e")
         @assert haskey(input, "e_soften")
+        @assert haskey(input, "area")
         return Materials.Bundle(
             input["id"],
             convert(Float64, input["density"]),
@@ -102,6 +103,7 @@ function parse_material(input)
             convert(Float64, input["d"]),
             convert(Float64, input["e"]),
             convert(Float64, input["e_soften"]),
+            convert(Float64, input["area"]),
             Float64(input["a"]) * Float64(input["b"]),
             []
         )

@@ -129,13 +129,14 @@ function getforce(bond::Bond{Materials.Bundle, Materials.Bundle})
         c = bond.from.material.c
         d = bond.from.material.d
         e = bond.from.material.e
+        area = (bond.from.material.area + bond.to.material.area) * 0.5
         e_soften = bond.from.material.e_soften
         if bond.max_strain > bond.from.material.e_soften && strain < bond.max_strain        # If the bond is beyond the softening strain but less than the max strain...
             # Lineary interpolate down
             magnitude =  max(0,
                 (((a*tanh(b * e_soften) + c*tanh(d*(bond.max_strain - e_soften)) - e * (e_soften - strain)) * 0.1666666666666666666666) +
                 ((strain - bond.max_strain) * a * b)) * bond.from.volume * bond.to.volume)
-            return direction * magnitude
+            return direction * magnitude * area
 
         end
         if strain > bond.from.material.e_soften         # If the bond is softened, but at it's peak strain
@@ -145,16 +146,17 @@ function getforce(bond::Bond{Materials.Bundle, Materials.Bundle})
                 0.1666666666666666666666 *
                 bond.to.volume *
                 bond.from.volume
-            )
+            ) * area
         else        # If the bond hasn't softened (Elastic, follows tanh function)
             return  direction *
             (
                 bond.from.material.a*tanh(bond.from.material.b * strain) *
+                0.1666666666666666666666 *
                 bond.to.volume *
-                bond.from.volume * 0.1666666666666666666666
-            )
+                bond.from.volume
+            ) * area
         end
-    else
+    else    # If an interface bond
         bond.isBroken && return zeros(3)
         return  direction * 
         (
