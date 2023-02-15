@@ -92,7 +92,7 @@ function parse_material(input)
         @assert haskey(input, "e_soften")
         @assert haskey(input, "area")
         return Materials.Bundle(
-            input["id"],
+            convert(Int64, input["id"]),
             convert(Float64, input["density"]),
             convert(Float64,input["interface_stiffness"]),
             convert(Float64, input["interface_critical_stretch"]),
