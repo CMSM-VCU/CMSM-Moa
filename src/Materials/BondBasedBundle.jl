@@ -19,7 +19,7 @@ mutable struct Bundle <: AMaterial
     d::Float64
     e::Float64
     e_soften::Float64
-    mass::Float64
+    area::Float64
 
     emod::Float64
 
@@ -39,7 +39,7 @@ Base.copy(material::Bundle) = Bundle(material.id,
     material.d,
     material.e,
     material.e_soften,
-    material.mass,
+    material.area,
     material.emod,
     [])
 
