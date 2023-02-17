@@ -216,6 +216,8 @@ function apply_contact_force(state)
                 @atomic node.force += (state.contactCoefficient * ((state.contactDistance - distance) / state.contactDistance) * node.volume * other.volume) * direction
             end
         end
+    else
+        throw("Attempted to apply contact force but the state does not allow it")
     end
 end
 
