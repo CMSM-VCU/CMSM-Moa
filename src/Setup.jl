@@ -1,6 +1,7 @@
 import Pkg
 Pkg.add("CSV")
 Pkg.add("StaticArrays")
+Pkg.add("Revise")
 
 # PyCall
 Pkg.add("PyCall")
