@@ -258,10 +258,14 @@ function write_output(state, timestep::Int64)
                 node.material.id,
                 Nodes.damage(node),
                 Nodes.interfaceDamage(node),
-                Nodes.materialDamage(node)
+                Nodes.materialDamage(node),
+                # These two metrics are for BondBasedBundle Material only (could also work with BondBasedTanhElasatic), 
+                # if this gives you problems, comment these two out or delete:
+                length([bond for bond in node.family if bond.isBroken && bond.from.material.id ∈ bond.to.material.stronglyConnected]),
+                length([bond for bond in node.family if bond.isBroken && bond.from.material.id ∉ bond.to.material.stronglyConnected])
                 ) for node in state.nodes],
             # columns = ["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "dmg", "dmgi", "dmgm", "mat"]
-            columns = ["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "mat", "dmg", "dmgi", "dmgm"]
+            columns = ["x", "y", "z", "ux", "uy", "uz", "vx", "vy", "vz", "mat", "dmg", "dmgi", "dmgm", "num_broken_material_bonds", "num_broken_interface_bonds"]
     )
     df.to_hdf(state.output_folder*"/output.h5", "t"*lpad(timestep, 7, "0"), mode="a")
 
