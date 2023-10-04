@@ -26,7 +26,7 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64, reference=
     shape = (dim_max - dim_min) / radius
 
     size1,size2,size3 = Int64(ceil(shape[1]))+1, Int64(ceil(shape[2]))+1,Int64(ceil(shape[3]))+1
-    @debug "Creating cell list ($(size1), $(size2), $(size3))"
+    # @debug "Creating cell list ($(size1), $(size2), $(size3))"
 
     # Each thread adds to it's own version
     # threaded_data = fill(fill(Vector{Nodes.Node}(),(size1,size2,size3)), Threads.nthreads());
@@ -49,7 +49,7 @@ function create_cell_list(nodes::Vector{Nodes.Node}, radius::Float64, reference=
     end
 
         
-    @debug "Created cell list: $(size(data))"
+    # @debug "Created cell list: $(size(data))"
     return CellList(data, radius, dim_min, dim_max)
 end
 

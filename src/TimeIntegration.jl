@@ -168,15 +168,15 @@ function stagedloading(state, velocity_threshold::Float64, maxIterations::Int64,
             end
         end
 
-        # Break compressive interface bonds
-        Threads.@threads for node in state.nodes
-            for bond in node.family
-                if Bonds.getstrain(bond) < 0 && bond.from.material.id ∉ bond.to.material.stronglyConnected
-                    Bonds.delete(bond)
-                    anybroken[Threads.threadid()] = true
-                end
-            end
-        end
+        # # Break compressive interface bonds
+        # Threads.@threads for node in state.nodes
+        #     for bond in node.family
+        #         if Bonds.getstrain(bond) < 0 && bond.from.material.id ∉ bond.to.material.stronglyConnected
+        #             Bonds.delete(bond)
+        #             anybroken[Threads.threadid()] = true
+        #         end
+        #     end
+        # end
 
         # println("Have any bonds broken: ", any(anybroken))
 

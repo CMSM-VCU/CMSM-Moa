@@ -41,6 +41,7 @@ using .Nodes
 using PyCall
 
 function parse_input(path::String)
+    @info "REMOVED COMPRESSIVE INTERFACE BOND FAILURE!!!"
     @info "Parsing input..."
     input = TOML.parsefile(path)
 
